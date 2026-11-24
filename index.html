@@ -229,6 +229,17 @@ details.more[open] summary{color:var(--text);}
 .tournee-city{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:18px 0 8px;}
 .tournee-city:first-child{margin-top:0;}
 .tournee-row{display:flex;align-items:center;gap:12px;padding:11px 14px;border:1.5px solid var(--border-soft);border-radius:var(--radius);background:var(--surface);margin-bottom:8px;cursor:pointer;}
+.tournee-card{padding:14px 16px;margin-bottom:10px;cursor:pointer;}
+.tournee-card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px;}
+.tournee-card-head .nom{font-weight:800;font-size:14px;}
+.tournee-stop{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;box-shadow:var(--shadow-sm);background:var(--surface);}
+.tournee-stop-top{display:flex;align-items:center;gap:10px;}
+.tournee-stop-reorder{display:flex;flex-direction:column;gap:2px;flex:none;}
+.btn-ghost-sm{background:var(--surface-2);border:1px solid var(--border-soft);border-radius:var(--radius-sm);padding:1px 6px;font-size:11px;line-height:1.4;}
+.btn-ghost-sm:disabled{opacity:.3;}
+.tournee-stop-info{flex:1;min-width:0;}
+.tournee-stop-info .nom{font-weight:700;font-size:13.5px;}
+.tournee-stop-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
 .tournee-row:hover{border-color:var(--border);}
 .tournee-row input[type=checkbox]{width:auto;flex:none;}
 .tournee-row .nom{font-weight:700;font-size:13.5px;flex:1;}
@@ -301,6 +312,9 @@ details.more[open] summary{color:var(--text);}
     </section>
 
     <section class="view" id="view-tournee">
+      <div class="section-title" style="margin-top:0;">Mes tournées</div>
+      <div id="tourneesSaved"></div>
+      <div class="section-title">Préparer une tournée</div>
       <div class="toolbar" id="tourneeToolbar"></div>
       <div id="tourneeList"></div>
       <div class="tournee-bar" id="tourneeBar"></div>
@@ -494,7 +508,7 @@ function apiDelete(collection, id){ return apiCall('POST', {}, {action:'delete',
 
 /* ---------------- state ---------------- */
 const state = {
-  companies: [], contacts: [], customers: [], goals: [],
+  companies: [], contacts: [], customers: [], goals: [], tournees: [],
   activeView: 'dashboard',
   companyFilters: { search:'', persona:'', owner:'', priorite:'', objectif:'', canal:'', ville:'', statut:'' },
   contactsSearch: '', b2cSearch: '',
@@ -539,10 +553,11 @@ async function boot(){
 async function refreshAll(){
   setSync('syncing', 'Synchronisation…');
   try{
-    const [companies, contacts, customers, goals] = await Promise.all([
+    const [companies, contacts, customers, goals, tournees] = await Promise.all([
       apiList('Entreprises'), apiList('Contacts'), apiList('Clients_B2C'), apiList('Objectifs'),
+      apiList('Tournees').catch(()=>[]), // tant que l'Apps Script n'a pas été redéployé avec l'onglet Tournees
     ]);
-    state.companies = companies; state.contacts = contacts; state.customers = customers; state.goals = goals;
+    state.companies = companies; state.contacts = contacts; state.customers = customers; state.goals = goals; state.tournees = tournees;
     state.ready = true;
     setSync('ok', 'À jour');
     renderCurrentView();
@@ -840,7 +855,180 @@ function renderPipeline(){
 function elAvatar(owner){ const a = el('span','avatar-chip', initials(owner)); a.title = owner; return a; }
 
 /* ---------------- TOURNÉE ---------------- */
+function tourneeProgress(t){
+  const stops = parseLog(t.stops);
+  const done = stops.filter(s=>s.statut==='realisee').length;
+  return {done, total: stops.length};
+}
+function renderTourneesSaved(){
+  const box = document.getElementById('tourneesSaved'); box.innerHTML='';
+  const list = state.tournees.slice().sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+  if(list.length===0){ box.appendChild(el('div','muted','Aucune tournée créée pour le moment.')); return; }
+  list.forEach(t=>{
+    const prog = tourneeProgress(t);
+    const card = el('div','card tournee-card');
+    const head = el('div','tournee-card-head');
+    head.appendChild(el('span','nom', t.nom || '(sans nom)'));
+    const badge = el('span','stage-chip', t.statut || 'En cours');
+    if(t.statut==='Terminée'){ badge.style.background='var(--phase-actif-bg)'; badge.style.color='var(--phase-actif-fg)'; }
+    else { badge.style.background='var(--phase-qualification)'; badge.style.color='#fff'; }
+    head.appendChild(badge);
+    card.appendChild(head);
+    const meta = el('div','muted', [t.date?fmtDateDisplay(t.date):'', t.owner, prog.done+'/'+prog.total+' visites réalisées'].filter(Boolean).join(' · '));
+    card.appendChild(meta);
+    card.addEventListener('click', ()=>openTourneeDetail(t.id));
+    box.appendChild(card);
+  });
+}
+function openCreateTourneeModal(){
+  const ids = Array.from(tourneeSelected);
+  if(ids.length===0){ toast('Sélectionnez au moins une entreprise'); return; }
+  const root = document.getElementById('modalRoot'); root.innerHTML='';
+  const overlay = el('div','overlay center');
+  const modal = el('div','modal');
+  modal.appendChild(el('h2',null,'Nouvelle tournée'));
+  const f1 = el('div','field'); f1.appendChild(el('label',null,'Nom')); const nomInput=document.createElement('input'); nomInput.type='text'; nomInput.placeholder='Tournée Seignosse / Hossegor'; f1.appendChild(nomInput); modal.appendChild(f1);
+  const f2 = el('div','field'); f2.appendChild(el('label',null,'Date')); const dateInput=document.createElement('input'); dateInput.type='date'; dateInput.value=todayISO(); f2.appendChild(dateInput); modal.appendChild(f2);
+  const f3 = el('div','field'); f3.appendChild(el('label',null,'Responsable')); const ownerSel=document.createElement('select'); D.owners.forEach(o=>{ const op=el('option',null,o); op.value=o; ownerSel.appendChild(op); }); f3.appendChild(ownerSel); modal.appendChild(f3);
+  modal.appendChild(el('div','muted', ids.length+' établissement'+(ids.length>1?'s':'')+' dans cette tournée.'));
+  const actions = el('div','drawer-footer');
+  actions.appendChild(el('button','btn','Annuler')).addEventListener('click', closeModal);
+  const save = el('button','btn btn-primary','Créer');
+  save.addEventListener('click', async ()=>{
+    const companies = state.companies.filter(c=>ids.includes(c.id));
+    const ordered = companies.slice().sort((a,b)=> (a.ville_pays||'').localeCompare(b.ville_pays||'') || (a.nom||'').localeCompare(b.nom||''));
+    const stops = ordered.map((c,i)=>({entreprise_id:c.id, ordre:i, statut:'a_faire', compte_rendu:'', date_realisation:''}));
+    const data = { nom: nomInput.value.trim() || 'Tournée du '+fmtDateDisplay(dateInput.value), date: dateInput.value, owner: ownerSel.value, statut: 'En cours', stops: JSON.stringify(stops), created_at: new Date().toISOString() };
+    const id = await createDoc('Tournees', data);
+    tourneeSelected.clear(); saveTourneeSelection();
+    closeModal(); toast('Tournée créée');
+    openTourneeDetail(id);
+  });
+  actions.appendChild(save);
+  modal.appendChild(actions);
+  overlay.appendChild(modal);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
+  root.appendChild(overlay);
+}
+function mapsLink(c){
+  return c.localisation ? c.localisation : [c.nom, c.ville_pays, 'France'].filter(Boolean).join(', ');
+}
+function openTourneeDetail(tourneeId){
+  const t = state.tournees.find(x=>x.id===tourneeId);
+  if(!t) return;
+  let stops = parseLog(t.stops);
+  const root = document.getElementById('modalRoot'); root.innerHTML='';
+  const overlay = el('div','overlay');
+  const drawer = el('div','drawer');
+  const head = el('div','drawer-head');
+  head.appendChild(el('h2',null, t.nom || '(sans nom)'));
+  const closeBtn = el('button','close-x','✕'); closeBtn.addEventListener('click', closeModal);
+  head.appendChild(closeBtn); drawer.appendChild(head);
+  drawer.appendChild(el('div','muted', [t.date?fmtDateDisplay(t.date):'', t.owner].filter(Boolean).join(' · ')));
+
+  const topActions = el('div','field'); topActions.style.marginTop='12px';
+  const goAllBtn = el('button','btn btn-primary btn-sm','Ouvrir l’itinéraire complet →');
+  goAllBtn.addEventListener('click', ()=>{
+    const links = stops.map(s=>{ const c = state.companies.find(x=>x.id===s.entreprise_id); return c ? encodeURIComponent(mapsLink(c)) : null; }).filter(Boolean);
+    window.open('https://www.google.com/maps/dir/'+links.join('/'), '_blank');
+  });
+  topActions.appendChild(goAllBtn);
+  drawer.appendChild(topActions);
+
+  const listBox = el('div'); listBox.style.marginTop='14px';
+  drawer.appendChild(listBox);
+
+  async function persistStops(){
+    const done = stops.filter(s=>s.statut==='realisee').length;
+    const statut = done===stops.length && stops.length>0 ? 'Terminée' : 'En cours';
+    await updateDoc('Tournees', t.id, {stops: JSON.stringify(stops), statut});
+    t.stops = JSON.stringify(stops); t.statut = statut;
+  }
+
+  function renderStops(){
+    listBox.innerHTML = '';
+    stops.forEach((s, idx)=>{
+      const c = state.companies.find(x=>x.id===s.entreprise_id);
+      const row = el('div','tournee-stop');
+      const top = el('div','tournee-stop-top');
+      const reorder = el('div','tournee-stop-reorder');
+      const upBtn = el('button','btn-ghost-sm','↑'); upBtn.disabled = idx===0;
+      upBtn.addEventListener('click', ()=>{ const tmp=stops[idx-1]; stops[idx-1]=stops[idx]; stops[idx]=tmp; stops.forEach((s,i)=>s.ordre=i); renderStops(); persistStops().catch(()=>{}); });
+      const downBtn = el('button','btn-ghost-sm','↓'); downBtn.disabled = idx===stops.length-1;
+      downBtn.addEventListener('click', ()=>{ const tmp=stops[idx+1]; stops[idx+1]=stops[idx]; stops[idx]=tmp; stops.forEach((s,i)=>s.ordre=i); renderStops(); persistStops().catch(()=>{}); });
+      reorder.appendChild(upBtn); reorder.appendChild(downBtn);
+      top.appendChild(reorder);
+      const info = el('div','tournee-stop-info');
+      info.appendChild(el('div','nom', c ? (c.nom||'(sans nom)') : '(entreprise supprimée)'));
+      if(c) info.appendChild(el('div','muted', mapsLink(c)));
+      top.appendChild(info);
+      const statusBadge = el('span','stage-chip', s.statut==='realisee' ? 'Réalisée' : 'À faire');
+      if(s.statut==='realisee'){ statusBadge.style.background='var(--phase-actif-bg)'; statusBadge.style.color='var(--phase-actif-fg)'; }
+      else { statusBadge.style.background='var(--phase-perdu-bg)'; statusBadge.style.color='var(--phase-perdu-fg)'; }
+      top.appendChild(statusBadge);
+      row.appendChild(top);
+
+      const actions = el('div','tournee-stop-actions');
+      if(c){
+        const navBtn = el('a','btn btn-sm','Google Maps');
+        navBtn.href = 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(mapsLink(c));
+        navBtn.target = '_blank';
+        actions.appendChild(navBtn);
+        const appleBtn = el('a','btn btn-sm','Apple Plans');
+        appleBtn.href = 'https://maps.apple.com/?daddr='+encodeURIComponent(mapsLink(c));
+        appleBtn.target = '_blank';
+        actions.appendChild(appleBtn);
+        const openFicheBtn = el('button','btn btn-sm','Ouvrir la fiche');
+        openFicheBtn.addEventListener('click', ()=> openCompanyDetail(c.id));
+        actions.appendChild(openFicheBtn);
+      }
+      if(s.statut!=='realisee'){
+        const doneBtn = el('button','btn btn-sm btn-primary','Marquer réalisée');
+        doneBtn.addEventListener('click', ()=>{
+          row.appendChild(buildCompteRenduForm(s, c));
+          doneBtn.disabled = true;
+        });
+        actions.appendChild(doneBtn);
+      }
+      row.appendChild(actions);
+      if(s.statut==='realisee' && s.compte_rendu){
+        row.appendChild(el('div','feed-text', 'Compte-rendu : '+s.compte_rendu));
+      }
+      listBox.appendChild(row);
+    });
+  }
+  function buildCompteRenduForm(s, c){
+    const form = el('div','feed-composer');
+    const ta = document.createElement('textarea'); ta.placeholder='Compte-rendu de la visite…';
+    const btn = el('button','btn btn-sm btn-primary','Valider la visite');
+    btn.addEventListener('click', async ()=>{
+      btn.disabled = true;
+      s.statut='realisee'; s.compte_rendu=ta.value.trim(); s.date_realisation=todayISO();
+      try{
+        await persistStops();
+        if(c){
+          const next = parseLog(c.notes_log).concat([{date:new Date().toISOString(), auteur:t.owner, texte: s.compte_rendu || 'Visite réalisée.', type:'Visite'}]);
+          await updateDoc('Entreprises', c.id, {notes_log: JSON.stringify(next), dernier_contact: todayISO()});
+        }
+        toast('Visite enregistrée');
+        renderStops();
+        renderTourneesSaved();
+      }catch(e){
+        s.statut='a_faire'; s.compte_rendu=''; s.date_realisation='';
+        btn.disabled = false;
+      }
+    });
+    form.appendChild(ta); form.appendChild(btn);
+    return form;
+  }
+  renderStops();
+
+  overlay.appendChild(drawer);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
+  root.appendChild(overlay);
+}
 function renderTournee(){
+  renderTourneesSaved();
   const toolbar = document.getElementById('tourneeToolbar'); toolbar.innerHTML='';
   const f = state.tourneeFilters;
   const search = document.createElement('input'); search.type='search'; search.placeholder='Rechercher une entreprise…'; search.value=f.search;
@@ -899,12 +1087,15 @@ function renderTourneeBar(){
   const clearBtn = el('button','btn btn-ghost-inv btn-sm','Vider');
   clearBtn.addEventListener('click', ()=>{ tourneeSelected.clear(); saveTourneeSelection(); renderTournee(); });
   bar.appendChild(clearBtn);
-  const goBtn = el('button','btn btn-sm','Ouvrir l’itinéraire →');
+  const goBtn = el('button','btn btn-sm','Aperçu itinéraire →');
   goBtn.addEventListener('click', ()=>{
-    const stops = selected.map(l=> encodeURIComponent(l.localisation ? l.localisation : [l.nom, l.ville_pays, 'France'].filter(Boolean).join(', ')) );
+    const stops = selected.map(l=> encodeURIComponent(mapsLink(l)) );
     window.open('https://www.google.com/maps/dir/'+stops.join('/'), '_blank');
   });
   bar.appendChild(goBtn);
+  const createBtn = el('button','btn btn-sm btn-primary','Créer la tournée →');
+  createBtn.addEventListener('click', openCreateTourneeModal);
+  bar.appendChild(createBtn);
 }
 
 /* ---------------- ENTREPRISES ---------------- */
