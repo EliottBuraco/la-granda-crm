@@ -53,9 +53,9 @@ button{cursor:pointer;}
 .statstrip{background:var(--accent-slab);color:var(--accent-slab-fg);font-size:12px;font-weight:600;padding:7px 22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
 .statstrip .star{color:var(--primary);font-weight:700;}
 .brand .flame{flex:none;}
-.topbar{display:flex;align-items:center;gap:18px;padding:14px 22px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:30;}
+.topbar{display:flex;align-items:center;gap:18px;padding:14px 22px;border-bottom:3px solid var(--primary);background:var(--surface);position:sticky;top:0;z-index:30;}
 .brand{display:flex;align-items:baseline;gap:8px;}
-.brand h1{font-family:var(--font-logo);font-size:24px;text-transform:none;letter-spacing:0;line-height:1;margin:0;}
+.brand h1{font-family:var(--font-logo);font-size:30px;text-transform:none;letter-spacing:0;line-height:1;margin:0;}
 .brand .star{color:var(--primary);font-size:14px;}
 .brand-text span{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;display:block;margin-top:2px;}
 .topbar .spacer{flex:1;}
@@ -272,18 +272,21 @@ tr.leadrow:hover{background:var(--surface-2);}
 "use strict";
 const D = window.STATIC_DATA;
 const STAGE_ORDER = D.stageOrder;
-const KO = "KO";
+const KO = "Perdu";
 
 // Apps Script Web App URL — rempli une fois le script déployé. Si vide,
 // chaque appareil peut le renseigner une fois via l'écran de configuration
 // (stocké uniquement dans ce navigateur).
 const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbyhffsu0e5Q432c_XwQJBV5iZfs8aVbxh4vF9zhHPTF-kAv1QB0ZaBA1X8xv7YsJFsjZw/exec";
 
-const PHASE_COLOR = {
-  prospection: 'var(--accent-pink)', qualification: 'var(--primary)',
-  negociation: 'var(--accent-maroon)', actif: 'var(--accent-slab)', perdu: 'var(--phase-perdu-bg)',
+const STAGE_COLOR = {
+  'Prospection':  { bg:'var(--accent-pink)',  fg:'var(--accent-pink-ink)',  tint:'color-mix(in srgb, var(--accent-pink) 16%, var(--surface-2))' },
+  'Qualification':{ bg:'var(--primary)',      fg:'#fff',                    tint:'color-mix(in srgb, var(--primary) 14%, var(--surface-2))' },
+  'Négociation':  { bg:'var(--accent-maroon)',fg:'#fff',                    tint:'color-mix(in srgb, var(--accent-maroon) 14%, var(--surface-2))' },
+  'Client actif': { bg:'var(--accent-slab)',  fg:'var(--accent-slab-fg)',  tint:'color-mix(in srgb, var(--accent-slab) 10%, var(--surface-2))' },
+  'Perdu':        { bg:'var(--phase-perdu-bg)', fg:'var(--phase-perdu-fg)', tint:'var(--surface-2)' },
 };
-const PHASE_FG = { prospection:'var(--accent-pink-ink)', qualification:'#fff', negociation:'#fff', actif:'var(--accent-slab-fg)', perdu:'var(--phase-perdu-fg)' };
+function stageColor(stage){ return STAGE_COLOR[stage] || STAGE_COLOR['Prospection']; }
 
 function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
 function fmtMoney(n){ n = Number(n)||0; return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'; }
@@ -297,10 +300,6 @@ function fmtDateDisplay(s){
   const d = parseISODate(s);
   if(!d) return s || "—";
   return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
-}
-function stagePhase(stage){
-  const p = D.phases.find(p=>p.stages.includes(stage));
-  return p ? p.key : D.phases[0].key;
 }
 function ownersList(s){ return String(s||'').split(',').map(x=>x.trim()).filter(Boolean); }
 function toast(msg){
@@ -627,18 +626,21 @@ function renderPipeline(){
   renderCompanyFilterToolbar(document.getElementById('pipelineToolbar'), {addButton:true});
   const board = document.getElementById('kanban'); board.innerHTML='';
   const companies = getFilteredCompanies();
-  D.phases.forEach(phase=>{
+  STAGE_ORDER.forEach(stage=>{
+    const sc = stageColor(stage);
     const col = el('div','kanban-col');
     const head = el('div','kanban-col-head');
-    head.style.background = PHASE_COLOR[phase.key]; head.style.color = PHASE_FG[phase.key];
-    head.appendChild(el('span','t',phase.label));
-    const inPhase = companies.filter(l=>stagePhase(l.stage)===phase.key);
-    head.appendChild(el('span','n', inPhase.length+' · '+fmtMoney(inPhase.reduce((s,l)=>s+(Number(l.valeur)||0),0))));
+    head.style.background = sc.bg; head.style.color = sc.fg;
+    head.appendChild(el('span','t',stage));
+    const inStage = companies.filter(l=>l.stage===stage);
+    head.appendChild(el('span','n', inStage.length+' · '+fmtMoney(inStage.reduce((s,l)=>s+(Number(l.valeur)||0),0))));
     col.appendChild(head);
     const body = el('div','kanban-col-body');
-    if(inPhase.length===0) body.appendChild(el('div','muted','—'));
-    inPhase.forEach(l=>{
+    body.style.background = sc.tint;
+    if(inStage.length===0) body.appendChild(el('div','muted','—'));
+    inStage.forEach(l=>{
       const card = el('div','kcard');
+      card.style.borderLeft = '4px solid '+sc.bg;
       const top = el('div','top-row');
       top.appendChild(el('span','nom', l.nom || '(sans nom)'));
       top.appendChild(pepperRating(l.priorite));
@@ -685,9 +687,9 @@ function renderEntreprises(){
     tr.appendChild(tdNom);
     tr.appendChild(el('td',null,l.persona||''));
     const tdStage = document.createElement('td');
-    const phase = stagePhase(l.stage);
-    const chip = el('span','stage-chip', l.stage==='KO' ? 'KO' : l.stage.split(' - ')[0]);
-    chip.style.background = PHASE_COLOR[phase]; chip.style.color = PHASE_FG[phase]; chip.title = l.stage;
+    const sc = stageColor(l.stage);
+    const chip = el('span','stage-chip', l.stage);
+    chip.style.background = sc.bg; chip.style.color = sc.fg;
     tdStage.appendChild(chip); tr.appendChild(tdStage);
     const tdPrio = document.createElement('td');
     if(l.priorite) tdPrio.appendChild(pepperRating(l.priorite));
@@ -720,8 +722,8 @@ function openAddCompanyModal(){
     const owners = Array.from(ownerWrap.querySelectorAll('input:checked')).map(c=>c.value).join(', ');
     const data = {
       persona: personaSel.value, nom: nomInput.value.trim(), instagram:'', site_web:'', localisation:'', ville_pays:'', tel_compte:'',
-      stage: STAGE_ORDER[0], etape_suivante:'', priorite:'Medium', objectif:'Vente', owners,
-      dernier_contact:'', date_prochaine_action:'', details_actions:'', objections:'', commandes:'', valeur:0, detail:'',
+      stage: STAGE_ORDER[0], priorite:'Medium', objectif:'Vente', owners,
+      dernier_contact:'', date_prochaine_action:'', commandes:'', valeur:0, detail:'',
       nom_contact:'', role_contact:'', email_contact:'', tel_contact:'',
     };
     const id = await createDoc('Entreprises', data);
@@ -785,9 +787,7 @@ function openCompanyDetail(id){
   const d2 = document.createElement('div'); d2.appendChild(el('label',null,'Prochaine action (date)')); const i2=document.createElement('input'); i2.type='date'; i2.value=parseISODate(lead.date_prochaine_action)?lead.date_prochaine_action:''; d2.appendChild(i2);
   dateRow.appendChild(d1); dateRow.appendChild(d2); drawer.appendChild(dateRow);
   fields.dernier_contact=i1; fields.date_prochaine_action=i2;
-  field('details_actions','Détails des dernières actions','textarea');
-  field('objections','Objections / freins','textarea');
-  field('detail','Notes générales','textarea');
+  field('detail','Notes','textarea');
 
   section('Commercial');
   field('commandes','Commandes passées');
