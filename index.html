@@ -208,6 +208,7 @@ details.more[open] summary{color:var(--text);}
 .linked-contact:last-child{border-bottom:none;}
 
 .feed-composer{border-top:1px solid var(--border-soft);padding-top:12px;margin-bottom:16px;}
+.feed-composer-bottom{margin-top:14px;margin-bottom:0;}
 .feed-composer textarea{margin-bottom:8px;min-height:50px;}
 .feed-composer-row{display:flex;gap:8px;align-items:center;}
 .feed-composer-row select{width:auto;flex:none;}
@@ -309,6 +310,12 @@ details.more[open] summary{color:var(--text);}
     <section class="view" id="view-pipeline">
       <div class="toolbar" id="pipelineToolbar"></div>
       <div class="kanban" id="kanban"></div>
+      <div class="table-wrap hidden" id="pipelineTableWrap">
+        <table>
+          <thead><tr><th>Entreprise</th><th>Persona</th><th>Étape</th><th>Priorité</th><th>Owner</th><th>Prochaine action</th><th>Valeur</th></tr></thead>
+          <tbody id="pipelineTbody"></tbody>
+        </table>
+      </div>
     </section>
 
     <section class="view" id="view-tournee">
@@ -514,6 +521,7 @@ const state = {
   contactsSearch: '', b2cSearch: '',
   tourneeFilters: { search:'', ville:'' },
   entreprisesViewMode: 'liste',
+  pipelineViewMode: 'colonnes',
   ready: false,
 };
 let tourneeSelected = new Set();
@@ -613,6 +621,15 @@ document.addEventListener('click', e=>{
 });
 
 /* ---------------- filter toolbar ---------------- */
+function buildViewToggle(options, current, onChange){
+  const toggle = el('div','view-toggle');
+  options.forEach(o=>{
+    const btn = el('button', current===o.value?'active':'', o.label);
+    btn.addEventListener('click', ()=> onChange(o.value));
+    toggle.appendChild(btn);
+  });
+  return toggle;
+}
 function renderCompanyFilterToolbar(container, opts){
   container.innerHTML='';
   const search = el('input'); search.type='search'; search.placeholder='Rechercher une entreprise…'; search.value=state.companyFilters.search;
@@ -662,13 +679,11 @@ function renderCompanyFilterToolbar(container, opts){
   filterWrap.appendChild(filterBtn); filterWrap.appendChild(panel);
   container.appendChild(filterWrap);
   if(opts && opts.viewToggle){
-    const toggle = el('div','view-toggle');
-    const btnListe = el('button', state.entreprisesViewMode==='liste'?'active':'', 'Liste');
-    const btnCarte = el('button', state.entreprisesViewMode==='carte'?'active':'', 'Carte');
-    btnListe.addEventListener('click', ()=>{ state.entreprisesViewMode='liste'; renderEntreprises(); });
-    btnCarte.addEventListener('click', ()=>{ state.entreprisesViewMode='carte'; renderEntreprises(); });
-    toggle.appendChild(btnListe); toggle.appendChild(btnCarte);
-    container.appendChild(toggle);
+    container.appendChild(buildViewToggle(
+      [{value:'liste',label:'Liste'},{value:'carte',label:'Carte'}],
+      state.entreprisesViewMode,
+      m=>{ state.entreprisesViewMode=m; renderEntreprises(); }
+    ));
   }
   if(opts && opts.addButton){
     const btn = el('button','btn btn-primary','+ Nouvelle entreprise');
@@ -814,9 +829,25 @@ function openGoalModal(goal){
 
 /* ---------------- PIPELINE ---------------- */
 function renderPipeline(){
-  renderCompanyFilterToolbar(document.getElementById('pipelineToolbar'), {addButton:true});
-  const board = document.getElementById('kanban'); board.innerHTML='';
+  const toolbar = document.getElementById('pipelineToolbar');
+  renderCompanyFilterToolbar(toolbar, {addButton:true});
+  toolbar.appendChild(buildViewToggle(
+    [{value:'colonnes',label:'Colonnes'},{value:'lignes',label:'Lignes'}],
+    state.pipelineViewMode,
+    m=>{ state.pipelineViewMode=m; renderPipeline(); }
+  ));
   const companies = getFilteredCompanies();
+
+  if(state.pipelineViewMode==='lignes'){
+    document.getElementById('kanban').classList.add('hidden');
+    document.getElementById('pipelineTableWrap').classList.remove('hidden');
+    renderPipelineRows(companies);
+    return;
+  }
+  document.getElementById('kanban').classList.remove('hidden');
+  document.getElementById('pipelineTableWrap').classList.add('hidden');
+
+  const board = document.getElementById('kanban'); board.innerHTML='';
   STAGE_ORDER.forEach(stage=>{
     const sc = stageColor(stage);
     const col = el('div','kanban-col');
@@ -850,6 +881,45 @@ function renderPipeline(){
     });
     col.appendChild(body);
     board.appendChild(col);
+  });
+}
+function renderPipelineRows(companies){
+  const tbody = document.getElementById('pipelineTbody'); tbody.innerHTML='';
+  const sorted = companies.slice().sort((a,b)=> STAGE_ORDER.indexOf(a.stage)-STAGE_ORDER.indexOf(b.stage) || (a.nom||'').localeCompare(b.nom||''));
+  if(sorted.length===0){
+    const tr = document.createElement('tr'); const td = document.createElement('td');
+    td.colSpan=7; td.className='empty'; td.textContent='Aucune entreprise ne correspond aux filtres.';
+    tr.appendChild(td); tbody.appendChild(tr); return;
+  }
+  sorted.forEach(l=>{
+    const tr = el('tr','leadrow');
+    const tdNom = document.createElement('td');
+    tdNom.appendChild(el('div',null,l.nom||'(sans nom)'));
+    if(l.instagram) tdNom.appendChild(el('div','muted','@'+l.instagram.replace(/^@/,'')));
+    tdNom.addEventListener('click', ()=>openCompanyDetail(l.id));
+    tdNom.style.cursor='pointer';
+    tr.appendChild(tdNom);
+    const tdPersona = el('td',null,l.persona||''); tdPersona.addEventListener('click', ()=>openCompanyDetail(l.id)); tdPersona.style.cursor='pointer';
+    tr.appendChild(tdPersona);
+    const tdStage = document.createElement('td');
+    const sel = document.createElement('select');
+    STAGE_ORDER.forEach(s=>{ const o=el('option',null,s); o.value=s; if(s===l.stage) o.selected=true; sel.appendChild(o); });
+    sel.addEventListener('change', e=>{ updateDoc('Entreprises', l.id, {stage:e.target.value}).then(()=>toast('Étape mise à jour')); });
+    tdStage.appendChild(sel);
+    tr.appendChild(tdStage);
+    const tdPrio = document.createElement('td');
+    if(l.priorite) tdPrio.appendChild(pepperRating(l.priorite));
+    tdPrio.addEventListener('click', ()=>openCompanyDetail(l.id)); tdPrio.style.cursor='pointer';
+    tr.appendChild(tdPrio);
+    const tdOwner = el('td',null, ownersList(l.owners).join(', ')); tdOwner.addEventListener('click', ()=>openCompanyDetail(l.id)); tdOwner.style.cursor='pointer';
+    tr.appendChild(tdOwner);
+    const tdDate = document.createElement('td');
+    if(l.date_prochaine_action){ tdDate.textContent = fmtDateDisplay(l.date_prochaine_action); if(l.date_prochaine_action<todayISO()) tdDate.style.color='var(--primary)'; }
+    tdDate.addEventListener('click', ()=>openCompanyDetail(l.id)); tdDate.style.cursor='pointer';
+    tr.appendChild(tdDate);
+    const tdValeur = el('td',null, l.valeur ? fmtMoney(l.valeur) : '—'); tdValeur.addEventListener('click', ()=>openCompanyDetail(l.id)); tdValeur.style.cursor='pointer';
+    tr.appendChild(tdValeur);
+    tbody.appendChild(tr);
   });
 }
 function elAvatar(owner){ const a = el('span','avatar-chip', initials(owner)); a.title = owner; return a; }
@@ -1338,28 +1408,15 @@ function renderCommandesList(container, opts){
 }
 function renderNotesFeed(container, opts){
   container.innerHTML = '';
-  if(opts.onAddNote){
-    const composer = el('div','feed-composer');
-    const ta = document.createElement('textarea'); ta.placeholder='Écrire une note…';
-    const row = el('div','feed-composer-row');
-    const typeSel = document.createElement('select');
-    D.eventTypes.forEach(t=>{ const op=el('option',null,t); op.value=t; typeSel.appendChild(op); });
-    const authSel = document.createElement('select');
-    D.owners.forEach(o=>{ const op=el('option',null,o); op.value=o; authSel.appendChild(op); });
-    const btn = el('button','btn btn-sm btn-primary','Ajouter');
-    btn.addEventListener('click', async ()=>{
-      const texte = ta.value.trim(); if(!texte) return;
-      btn.disabled = true;
-      try{ await opts.onAddNote(texte, authSel.value, typeSel.value); ta.value=''; }
-      finally{ btn.disabled = false; }
-    });
-    row.appendChild(typeSel); row.appendChild(authSel); row.appendChild(btn);
-    composer.appendChild(ta); composer.appendChild(row);
-    container.appendChild(composer);
-  }
-  const items = (opts.notes||[]).slice().sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+  const items = (opts.notes||[]).slice().sort((a,b)=> (a.date||'').localeCompare(b.date||''));
   const list = el('div','feed');
   if(items.length===0 && !opts.legacyNote){ list.appendChild(el('div','muted','Aucune note pour le moment.')); }
+  if(opts.legacyNote){
+    const row = el('div','feed-item feed-item-legacy');
+    row.appendChild(el('div','feed-auteur','Ancienne note'));
+    row.appendChild(el('div','feed-text', opts.legacyNote));
+    list.appendChild(row);
+  }
   items.forEach(it=>{
     const row = el('div','feed-item');
     const head = el('div','feed-item-head');
@@ -1371,13 +1428,27 @@ function renderNotesFeed(container, opts){
     if(it.source) row.appendChild(el('div','feed-source', it.source));
     list.appendChild(row);
   });
-  if(opts.legacyNote){
-    const row = el('div','feed-item feed-item-legacy');
-    row.appendChild(el('div','feed-auteur','Ancienne note'));
-    row.appendChild(el('div','feed-text', opts.legacyNote));
-    list.appendChild(row);
-  }
   container.appendChild(list);
+  if(opts.onAddNote){
+    const composer = el('div','feed-composer feed-composer-bottom');
+    const ta = document.createElement('textarea'); ta.placeholder='Écrire une note…'; ta.rows=2;
+    const row = el('div','feed-composer-row');
+    const typeSel = document.createElement('select');
+    D.eventTypes.forEach(t=>{ const op=el('option',null,t); op.value=t; typeSel.appendChild(op); });
+    const authSel = document.createElement('select');
+    D.owners.forEach(o=>{ const op=el('option',null,o); op.value=o; authSel.appendChild(op); });
+    const btn = el('button','btn btn-sm btn-primary','Envoyer');
+    function submit(){
+      const texte = ta.value.trim(); if(!texte) return;
+      btn.disabled = true;
+      opts.onAddNote(texte, authSel.value, typeSel.value).then(()=>{ ta.value=''; ta.focus(); }).finally(()=>{ btn.disabled = false; });
+    }
+    btn.addEventListener('click', submit);
+    ta.addEventListener('keydown', e=>{ if(e.key==='Enter' && (e.metaKey||e.ctrlKey)){ e.preventDefault(); submit(); } });
+    row.appendChild(typeSel); row.appendChild(authSel); row.appendChild(btn);
+    composer.appendChild(ta); composer.appendChild(row);
+    container.appendChild(composer);
+  }
 }
 function addDrawerExpandToggle(head, drawer){
   const actions = el('div','drawer-head-actions');
