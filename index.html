@@ -11,7 +11,9 @@
   --bg:#F7F6F3; --surface:#FFFFFF; --surface-2:#F1EFEA; --surface-3:#E8E5DD;
   --text:#1A1816; --text-muted:#716C63; --border:#DEDAD1;
   --primary:#E8392E; --primary-dark:#C22A20; --primary-soft:#FBD9D4;
-  --accent-purple:#8B6FB8; --accent-green:#3E8E72; --accent-orange:#D9722E; --accent-slab:#2B2824; --accent-slab-fg:#FFFFFF;
+  --accent-pink:#D977DC; --accent-pink-ink:#6B1530;
+  --accent-maroon:#8A2432; --accent-slab:#201C19; --accent-slab-fg:#FFFFFF;
+  --success:#3F7A52; --warn:#C98A2C;
   --phase-perdu-bg:#E7E3DA; --phase-perdu-fg:#716C63;
   --radius:8px; --shadow:0 1px 2px rgba(20,16,12,.06), 0 4px 14px -8px rgba(20,16,12,.14);
   --font-display:'Anton',Impact,sans-serif; --font-logo:'Permanent Marker',cursive; --font-body:'Inter',system-ui,sans-serif;
@@ -21,7 +23,9 @@
     --bg:#171512; --surface:#1E1C19; --surface-2:#242220; --surface-3:#2C2925;
     --text:#EFEAE2; --text-muted:#A79E90; --border:#34312B;
     --primary:#FF7A5C; --primary-dark:#E8392E; --primary-soft:#3D241D;
-    --accent-purple:#A98FD1; --accent-green:#5FBB98; --accent-orange:#E8924F; --accent-slab:#EFEAE2; --accent-slab-fg:#171512;
+    --accent-pink:#E09BE3; --accent-pink-ink:#4A1020;
+    --accent-maroon:#B23A4C; --accent-slab:#EFEAE2; --accent-slab-fg:#171512;
+    --success:#5FBB98; --warn:#E8924F;
     --phase-perdu-bg:#2A2824; --phase-perdu-fg:#8F8778;
     --shadow:0 1px 2px rgba(0,0,0,.35), 0 6px 18px -8px rgba(0,0,0,.5);
   }
@@ -30,7 +34,9 @@
   --bg:#171512; --surface:#1E1C19; --surface-2:#242220; --surface-3:#2C2925;
   --text:#EFEAE2; --text-muted:#A79E90; --border:#34312B;
   --primary:#FF7A5C; --primary-dark:#E8392E; --primary-soft:#3D241D;
-  --accent-purple:#A98FD1; --accent-green:#5FBB98; --accent-orange:#E8924F; --accent-slab:#EFEAE2; --accent-slab-fg:#171512;
+  --accent-pink:#E09BE3; --accent-pink-ink:#4A1020;
+  --accent-maroon:#B23A4C; --accent-slab:#EFEAE2; --accent-slab-fg:#171512;
+  --success:#5FBB98; --warn:#E8924F;
   --phase-perdu-bg:#2A2824; --phase-perdu-fg:#8F8778;
   --shadow:0 1px 2px rgba(0,0,0,.35), 0 6px 18px -8px rgba(0,0,0,.5);
 }
@@ -44,6 +50,9 @@ button{cursor:pointer;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:9px;}
 
 #app{display:flex;flex-direction:column;min-height:100vh;}
+.statstrip{background:var(--accent-slab);color:var(--accent-slab-fg);font-size:12px;font-weight:600;padding:7px 22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+.statstrip .star{color:var(--primary);font-weight:700;}
+.brand .flame{flex:none;}
 .topbar{display:flex;align-items:center;gap:18px;padding:14px 22px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:30;}
 .brand{display:flex;align-items:baseline;gap:8px;}
 .brand h1{font-family:var(--font-logo);font-size:24px;text-transform:none;letter-spacing:0;line-height:1;margin:0;}
@@ -51,8 +60,8 @@ button{cursor:pointer;}
 .brand-text span{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;display:block;margin-top:2px;}
 .topbar .spacer{flex:1;}
 .syncbox{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-muted);}
-.syncdot{width:7px;height:7px;border-radius:50%;background:var(--accent-green);}
-.syncdot.syncing{background:var(--accent-orange);}
+.syncdot{width:7px;height:7px;border-radius:50%;background:var(--success);}
+.syncdot.syncing{background:var(--warn);}
 .syncdot.err{background:var(--primary);}
 .tabs{display:flex;gap:2px;padding:0 22px;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;}
 .tab{padding:12px 15px;font-size:13px;font-weight:700;color:var(--text-muted);border-bottom:2.5px solid transparent;white-space:nowrap;background:none;border-radius:0;margin-bottom:-1px;}
@@ -92,10 +101,10 @@ a{color:var(--primary);}
 
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px;}
 .kpi{padding:16px 18px;}
-.kpi.hero{background:var(--primary);border-color:var(--primary-dark);color:#fff;box-shadow:none;}
+.kpi.hero{background:var(--accent-pink);border-color:var(--accent-pink-ink);color:var(--accent-pink-ink);box-shadow:none;}
 .kpi .num{font-family:var(--font-display);font-size:28px;line-height:1;font-variant-numeric:tabular-nums;}
 .kpi .lbl{font-size:11px;color:var(--text-muted);margin-top:5px;text-transform:uppercase;letter-spacing:.03em;font-weight:700;}
-.kpi.hero .lbl{color:rgba(255,255,255,.85);}
+.kpi.hero .lbl{color:var(--accent-pink-ink);opacity:.8;}
 .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 @media (max-width:900px){.dash-grid{grid-template-columns:1fr;} .field-row{grid-template-columns:1fr;}}
 .panel{padding:18px;margin-bottom:16px;}
@@ -110,7 +119,7 @@ a{color:var(--primary);}
 .goal-card .title{font-weight:700;font-size:14.5px;}
 .goal-card .nums{font-size:13px;color:var(--text-muted);font-variant-numeric:tabular-nums;}
 .goal-track{height:10px;background:var(--surface-3);border-radius:999px;overflow:hidden;margin:8px 0 6px;}
-.goal-fill{height:100%;background:var(--accent-green);}
+.goal-fill{height:100%;background:var(--success);}
 .goal-meta{font-size:11.5px;color:var(--text-muted);display:flex;justify-content:space-between;}
 
 .kanban{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;}
@@ -164,9 +173,11 @@ tr.leadrow:hover{background:var(--surface-2);}
 <body>
 
 <div id="app">
+  <div class="statstrip" id="statStrip"></div>
   <div class="topbar">
     <div class="brand">
       <h1>La Granda</h1>
+      <svg class="flame" width="15" height="15" viewBox="0 0 24 24"><path d="M12 2c1.5 3.2-1.8 4.3-2.3 7.3-.6 3.4 1.3 6.2 4.3 6.2 3.3 0 5.6-2.7 5-6-.3-1.7-1.3-2.9-2.3-3.9 1 2 .3 3.6-1 3.6-1.6 0-1.3-2.1-.2-3.4C16.6 4.3 14 3 12 2z" fill="var(--primary)" stroke="var(--text)" stroke-width="1"/></svg>
       <span class="star">★</span>
       <div class="brand-text"><span>CRM</span></div>
     </div>
@@ -269,10 +280,10 @@ const KO = "KO";
 const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbyhffsu0e5Q432c_XwQJBV5iZfs8aVbxh4vF9zhHPTF-kAv1QB0ZaBA1X8xv7YsJFsjZw/exec";
 
 const PHASE_COLOR = {
-  prospection: 'var(--accent-purple)', qualification: 'var(--accent-green)',
-  negociation: 'var(--accent-orange)', actif: 'var(--accent-slab)', perdu: 'var(--phase-perdu-bg)',
+  prospection: 'var(--accent-pink)', qualification: 'var(--primary)',
+  negociation: 'var(--accent-maroon)', actif: 'var(--accent-slab)', perdu: 'var(--phase-perdu-bg)',
 };
-const PHASE_FG = { prospection:'#fff', qualification:'#fff', negociation:'#fff', actif:'var(--accent-slab-fg)', perdu:'var(--phase-perdu-fg)' };
+const PHASE_FG = { prospection:'var(--accent-pink-ink)', qualification:'#fff', negociation:'#fff', actif:'var(--accent-slab-fg)', perdu:'var(--phase-perdu-fg)' };
 
 function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
 function fmtMoney(n){ n = Number(n)||0; return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'; }
@@ -388,10 +399,28 @@ async function refreshAll(){
     state.companies = companies; state.contacts = contacts; state.customers = customers; state.goals = goals;
     state.ready = true;
     setSync('ok', 'À jour');
+    renderStatStrip();
     renderCurrentView();
   }catch(e){
     setSync('error', 'Hors ligne');
   }
+}
+function renderStatStrip(){
+  const strip = document.getElementById('statStrip'); if(!strip) return;
+  strip.innerHTML = '';
+  const active = state.companies.filter(l=>l.stage!==KO);
+  const today = todayISO();
+  const overdue = active.filter(l=>{ const d=parseISODate(l.date_prochaine_action); return d && l.date_prochaine_action < today; }).length;
+  const totalValeur = active.reduce((s,l)=>s+(Number(l.valeur)||0),0);
+  const parts = [
+    active.length+' entreprises actives',
+    overdue+' action'+(overdue>1?'s':'')+' en retard',
+    fmtMoney(totalValeur)+' de pipeline',
+  ];
+  parts.forEach((p,i)=>{
+    if(i>0) strip.appendChild(el('span','star','★'));
+    strip.appendChild(el('span',null,p));
+  });
 }
 let pollTimer = null;
 function startPolling(){
@@ -504,7 +533,7 @@ function renderDashboard(){
   withDates.forEach(x=>{
     const row = el('div','action-item');
     const late = x.d < today;
-    const dot = el('span','flag'); dot.style.background = late ? 'var(--primary)' : 'var(--accent-green)';
+    const dot = el('span','flag'); dot.style.background = late ? 'var(--primary)' : 'var(--success)';
     row.appendChild(dot);
     const name = el('span',null,x.l.nom || '(sans nom)'); name.style.fontWeight='700'; name.style.flex='1';
     row.appendChild(name);
@@ -525,9 +554,9 @@ function goalCard(g, compact){
   const track = el('div','goal-track');
   const pct = g.cible ? Math.min(100, Math.round((Number(g.valeur_actuelle)||0)/Number(g.cible)*100)) : 0;
   const fill = el('div','goal-fill'); fill.style.width = pct+'%';
-  if(pct>=100) fill.style.background='var(--accent-green)';
+  if(pct>=100) fill.style.background='var(--success)';
   else if(pct<34) fill.style.background='var(--primary)';
-  else fill.style.background='var(--accent-orange)';
+  else fill.style.background='var(--warn)';
   track.appendChild(fill); card.appendChild(track);
   const meta = el('div','goal-meta');
   meta.appendChild(el('span',null, g.echeance ? ('Échéance : '+fmtDateDisplay(g.echeance)) : ''));
