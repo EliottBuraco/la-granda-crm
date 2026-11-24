@@ -15,9 +15,10 @@
   --text:#141414; --text-muted:#6B6B6B; --border:#141414; --border-soft:#E7E4DD; --border-strong:#141414;
   --primary:#FF3B2E; --primary-dark:#C22A20; --primary-tint:#FFE7E3;
   --success:#1FAE63; --warn:#FFB400;
-  --phase-prospection:#1FAE63; --phase-qualification:#FF8A1E; --phase-negociation:#9B5DE5;
+  --phase-prospection:#1FAE63; --phase-contacte:#2E8FD9; --phase-qualification:#FF8A1E; --phase-interesse:#E8B400; --phase-negociation:#9B5DE5; --phase-premiere:#E0469A;
   --phase-actif-bg:#141414; --phase-actif-fg:#FFFFFF;
   --phase-perdu-bg:#EFEDE8; --phase-perdu-fg:#6B6B6B;
+  --map-prospect:#1FAE63; --map-relancer:#FF8A1E; --map-actif:#141414; --map-inactif:#9A968E; --map-distributeur:#2E8FD9;
   --radius:6px; --radius-sm:4px; --radius-pill:6px;
   --shadow:5px 5px 0 #141414; --shadow-sm:3px 3px 0 #141414;
   --font-display:'Archivo Black',Impact,sans-serif; --font-logo:'Permanent Marker',cursive; --font-body:'Inter',system-ui,sans-serif;
@@ -27,9 +28,10 @@
   --text:#F2F0EC; --text-muted:#A6A29A; --border:#F2F0EC; --border-soft:#333131; --border-strong:#F2F0EC;
   --primary:#FF6B5A; --primary-dark:#E8392E; --primary-tint:#3A201C;
   --success:#38C27F; --warn:#FFC94D;
-  --phase-prospection:#38C27F; --phase-qualification:#FFA64D; --phase-negociation:#B98CF0;
+  --phase-prospection:#38C27F; --phase-contacte:#5BA7E8; --phase-qualification:#FFA64D; --phase-interesse:#F2CA4D; --phase-negociation:#B98CF0; --phase-premiere:#ED6EB5;
   --phase-actif-bg:#F2F0EC; --phase-actif-fg:#141414;
   --phase-perdu-bg:#2B2B2B; --phase-perdu-fg:#9A968E;
+  --map-prospect:#38C27F; --map-relancer:#FFA64D; --map-actif:#F2F0EC; --map-inactif:#6B6760; --map-distributeur:#5BA7E8;
   --shadow:5px 5px 0 rgba(0,0,0,.55); --shadow-sm:3px 3px 0 rgba(0,0,0,.55);
 }
 *{box-sizing:border-box;}
@@ -155,9 +157,17 @@ tr.leadrow:hover{background:var(--surface-2);}
 .map-wrap{border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;background:var(--surface);}
 #entreprisesMap{height:560px;width:100%;}
 .map-status{padding:9px 14px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border-soft);}
+.map-legend{display:flex;flex-wrap:wrap;gap:14px;padding:10px 14px;border-bottom:1px solid var(--border-soft);font-size:11.5px;}
+.map-legend-item{display:flex;align-items:center;gap:6px;}
+.map-legend-dot{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--border-strong);flex:none;}
 .map-popup .nom{font-weight:800;font-size:13px;margin-bottom:2px;}
 .map-popup .muted{font-size:11.5px;}
-.map-popup button{margin-top:6px;}
+.map-popup .statut-badge{display:inline-block;padding:2px 7px;border-radius:var(--radius-sm);font-size:9.5px;font-weight:800;text-transform:uppercase;color:#fff;margin:4px 0;}
+.map-popup .map-meta{font-size:11px;color:var(--text-muted);margin-top:4px;}
+.map-popup label{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;text-transform:none;margin-top:8px;}
+.map-popup label input{width:auto;}
+.map-popup button{margin-top:8px;}
+.map-pin{width:22px;height:22px;border-radius:50% 50% 50% 0;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);transform:rotate(-45deg);}
 .table-wrap table{min-width:760px;}
 .stage-chip{display:inline-block;padding:3px 8px;border-radius:var(--radius);font-size:10px;font-weight:800;text-transform:uppercase;border:1px solid var(--border);}
 
@@ -305,9 +315,11 @@ details.more[open] summary{color:var(--text);}
         </table>
       </div>
       <div class="map-wrap hidden" id="entreprisesMapWrap">
+        <div class="map-legend" id="entreprisesMapLegend"></div>
         <div id="entreprisesMap"></div>
         <div class="map-status" id="entreprisesMapStatus"></div>
       </div>
+      <div class="tournee-bar" id="entreprisesMapBar"></div>
     </section>
 
     <section class="view" id="view-contacts">
@@ -357,13 +369,39 @@ const KO = "Perdu";
 const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbyhffsu0e5Q432c_XwQJBV5iZfs8aVbxh4vF9zhHPTF-kAv1QB0ZaBA1X8xv7YsJFsjZw/exec";
 
 const STAGE_COLOR = {
-  'Prospection':   { bg:'var(--phase-prospection)',  fg:'#fff' },
-  'Qualification': { bg:'var(--phase-qualification)',fg:'#fff' },
-  'Négociation':   { bg:'var(--phase-negociation)',  fg:'#fff' },
-  'Client actif':  { bg:'var(--phase-actif-bg)',     fg:'var(--phase-actif-fg)' },
-  'Perdu':         { bg:'var(--phase-perdu-bg)',     fg:'var(--phase-perdu-fg)' },
+  'À prospecter':               { bg:'var(--phase-prospection)',  fg:'#fff' },
+  'Contacté':                   { bg:'var(--phase-contacte)',     fg:'#fff' },
+  'Qualifié':                   { bg:'var(--phase-qualification)',fg:'#fff' },
+  'Intéressé':                  { bg:'var(--phase-interesse)',    fg:'#141414' },
+  'Échantillon / Offre envoyé': { bg:'var(--phase-negociation)',  fg:'#fff' },
+  'Première commande':          { bg:'var(--phase-premiere)',     fg:'#fff' },
+  'Client actif':                { bg:'var(--phase-actif-bg)',     fg:'var(--phase-actif-fg)' },
+  'Perdu':                       { bg:'var(--phase-perdu-bg)',     fg:'var(--phase-perdu-fg)' },
 };
-function stageColor(stage){ return STAGE_COLOR[stage] || STAGE_COLOR['Prospection']; }
+function stageColor(stage){ return STAGE_COLOR[stage] || STAGE_COLOR['À prospecter']; }
+
+const MAP_STATUS_META = {
+  prospect:       { label:'Prospect',       color:'var(--map-prospect)' },
+  a_relancer:     { label:'À relancer',     color:'var(--map-relancer)' },
+  client_actif:   { label:'Client actif',   color:'var(--map-actif)' },
+  client_inactif: { label:'Client inactif', color:'var(--map-inactif)' },
+  distributeur:   { label:'Distributeur',   color:'var(--map-distributeur)' },
+};
+function computeMapStatus(c){
+  const persona = (c.persona||'').toLowerCase();
+  if(persona.includes('distributeur') || persona.includes('grossiste')) return 'distributeur';
+  if(c.stage==='Client actif'){
+    const dates = parseLog(c.commandes_log).map(o=>o.date).filter(Boolean).sort();
+    const lastDate = dates.length ? dates[dates.length-1] : null;
+    if(lastDate){
+      const monthsAgo = (Date.now() - new Date(lastDate+'T00:00:00').getTime()) / (1000*60*60*24*30);
+      if(monthsAgo > 6) return 'client_inactif';
+    }
+    return 'client_actif';
+  }
+  if(c.date_prochaine_action && c.date_prochaine_action < todayISO()) return 'a_relancer';
+  return 'prospect';
+}
 
 /* ---------------- theme (manual light/dark switch, light by default) ---------------- */
 function initTheme(){
@@ -458,7 +496,7 @@ function apiDelete(collection, id){ return apiCall('POST', {}, {action:'delete',
 const state = {
   companies: [], contacts: [], customers: [], goals: [],
   activeView: 'dashboard',
-  companyFilters: { search:'', persona:'', owner:'', priorite:'', objectif:'' },
+  companyFilters: { search:'', persona:'', owner:'', priorite:'', objectif:'', canal:'', ville:'', statut:'' },
   contactsSearch: '', b2cSearch: '',
   tourneeFilters: { search:'', ville:'' },
   entreprisesViewMode: 'liste',
@@ -578,13 +616,24 @@ function renderCompanyFilterToolbar(container, opts){
     s.addEventListener('change', e=>{ state.companyFilters[key]=e.target.value; renderCurrentView(); });
     return s;
   }
-  const activeCount = ['persona','owner','priorite','objectif'].filter(k=>state.companyFilters[k]).length;
+  function mkSelectKV(key, pairs, label){
+    const s = document.createElement('select');
+    const opt0 = el('option', null, label); opt0.value=''; s.appendChild(opt0);
+    pairs.forEach(p=>{ const o=el('option',null,p.label); o.value=p.value; if(state.companyFilters[key]===p.value) o.selected=true; s.appendChild(o); });
+    s.addEventListener('change', e=>{ state.companyFilters[key]=e.target.value; renderCurrentView(); });
+    return s;
+  }
+  const activeCount = ['persona','owner','priorite','objectif','canal','ville','statut'].filter(k=>state.companyFilters[k]).length;
   const filterWrap = el('div','filter-wrap');
   const filterBtn = el('button','btn filter-btn');
   filterBtn.appendChild(document.createTextNode('Filtres'));
   if(activeCount>0) filterBtn.appendChild(el('span','filter-count', String(activeCount)));
   const panel = el('div','filter-panel hidden');
+  panel.appendChild(mkSelectKV('statut', Object.keys(MAP_STATUS_META).map(k=>({value:k,label:MAP_STATUS_META[k].label})), 'Tous statuts'));
   panel.appendChild(mkSelect('persona', D.personas, 'Toutes personas'));
+  panel.appendChild(mkSelect('canal', D.canaux, 'Tous canaux'));
+  const villes = Array.from(new Set(state.companies.map(c=>c.ville_pays).filter(Boolean))).sort((a,b)=>a.localeCompare(b));
+  panel.appendChild(mkSelect('ville', villes, 'Toutes villes'));
   panel.appendChild(mkSelect('owner', D.owners, 'Tous owners'));
   panel.appendChild(mkSelect('priorite', D.priorites, 'Toutes priorités'));
   panel.appendChild(mkSelect('objectif', D.objectifs, 'Tous objectifs'));
@@ -619,6 +668,9 @@ function getFilteredCompanies(){
     if(f.priorite && l.priorite!==f.priorite) return false;
     if(f.objectif && l.objectif!==f.objectif) return false;
     if(f.owner && !ownersList(l.owners).includes(f.owner)) return false;
+    if(f.canal && l.canal!==f.canal) return false;
+    if(f.ville && l.ville_pays!==f.ville) return false;
+    if(f.statut && computeMapStatus(l)!==f.statut) return false;
     if(f.search){
       const s = f.search.toLowerCase();
       const hay = [l.nom,l.instagram,l.localisation,l.ville_pays,l.detail].join(' ').toLowerCase();
@@ -903,8 +955,55 @@ function renderEntreprises(){
 let leafletMap = null;
 let leafletMarkersLayer = null;
 let geocodingInProgress = false;
-async function renderEntreprisesMap(companies){
+const mapIcons = {};
+function mapIcon(statusKey){
+  if(mapIcons[statusKey]) return mapIcons[statusKey];
+  const color = MAP_STATUS_META[statusKey] ? MAP_STATUS_META[statusKey].color : 'var(--text-muted)';
+  const icon = L.divIcon({
+    className: 'map-pin-wrap',
+    html: '<div class="map-pin" style="background:'+color+';"></div>',
+    iconSize: [22,22], iconAnchor: [11,22], popupAnchor: [0,-20]
+  });
+  mapIcons[statusKey] = icon;
+  return icon;
+}
+function lastInteractionDate(c){
+  const notes = parseLog(c.notes_log).map(n=>n.date).filter(Boolean);
+  const commandes = parseLog(c.commandes_log).map(o=>o.date).filter(Boolean);
+  const all = notes.concat(commandes).sort();
+  return all.length ? all[all.length-1] : null;
+}
+function renderMapLegend(){
+  const legend = document.getElementById('entreprisesMapLegend'); legend.innerHTML='';
+  Object.keys(MAP_STATUS_META).forEach(k=>{
+    const item = el('div','map-legend-item');
+    const dot = el('span','map-legend-dot'); dot.style.background = MAP_STATUS_META[k].color;
+    item.appendChild(dot); item.appendChild(document.createTextNode(MAP_STATUS_META[k].label));
+    legend.appendChild(item);
+  });
+}
+function renderMapSelectionBar(){
+  const bar = document.getElementById('entreprisesMapBar'); bar.innerHTML='';
+  const ids = Array.from(tourneeSelected);
+  const selected = state.companies.filter(l=>ids.includes(l.id));
+  if(selected.length===0){ bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  bar.appendChild(el('span',null, selected.length+' établissement'+(selected.length>1?'s':'')+' sélectionné'+(selected.length>1?'s':'')));
+  bar.appendChild(el('div','spacer'));
+  const clearBtn = el('button','btn btn-ghost-inv btn-sm','Vider');
+  clearBtn.addEventListener('click', ()=>{ tourneeSelected.clear(); saveTourneeSelection(); renderMapSelectionBar(); });
+  bar.appendChild(clearBtn);
+  const goBtn = el('button','btn btn-sm','Préparer une tournée →');
+  goBtn.addEventListener('click', ()=>{
+    document.querySelector('.tab[data-view="tournee"]').click();
+  });
+  bar.appendChild(goBtn);
+}
+async function renderEntreprisesMap(allCompanies){
   const statusEl = document.getElementById('entreprisesMapStatus');
+  renderMapLegend();
+  renderMapSelectionBar();
+  const companies = allCompanies.filter(c=>c.stage!==KO);
   if(!leafletMap){
     leafletMap = L.map('entreprisesMap').setView([43.66, -1.42], 11);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -923,11 +1022,25 @@ async function renderEntreprisesMap(companies){
   const toGeocode = withAddress.filter(c=>!(c.geo_lat && c.geo_lng));
 
   function plot(c){
-    const marker = L.marker([Number(c.geo_lat), Number(c.geo_lng)]);
+    const statusKey = computeMapStatus(c);
+    const marker = L.marker([Number(c.geo_lat), Number(c.geo_lng)], {icon: mapIcon(statusKey)});
     const popup = document.createElement('div'); popup.className='map-popup';
     popup.appendChild(el('div','nom', c.nom||'(sans nom)'));
     popup.appendChild(el('div','muted', [c.persona, c.stage].filter(Boolean).join(' · ')));
-    const btn = el('button','btn btn-sm','Ouvrir');
+    const badge = el('span','statut-badge', MAP_STATUS_META[statusKey].label);
+    badge.style.background = MAP_STATUS_META[statusKey].color;
+    popup.appendChild(badge);
+    const lastDate = lastInteractionDate(c);
+    const meta = el('div','map-meta');
+    meta.textContent = (lastDate ? 'Dernière interaction : '+fmtDateDisplay(lastDate) : 'Aucune interaction enregistrée') +
+      (c.date_prochaine_action ? ' · Prochaine action : '+fmtDateDisplay(c.date_prochaine_action) : '');
+    popup.appendChild(meta);
+    const lbl = document.createElement('label');
+    const cb = document.createElement('input'); cb.type='checkbox'; cb.checked = tourneeSelected.has(c.id);
+    cb.addEventListener('change', ()=>{ if(cb.checked) tourneeSelected.add(c.id); else tourneeSelected.delete(c.id); saveTourneeSelection(); renderMapSelectionBar(); });
+    lbl.appendChild(cb); lbl.appendChild(document.createTextNode('Ajouter à la tournée'));
+    popup.appendChild(lbl);
+    const btn = el('button','btn btn-sm','Ouvrir la fiche');
     btn.addEventListener('click', ()=> openCompanyDetail(c.id));
     popup.appendChild(btn);
     marker.bindPopup(popup);
@@ -935,7 +1048,7 @@ async function renderEntreprisesMap(companies){
   }
   geocoded.forEach(plot);
 
-  const baseStatus = withoutAddress>0 ? (withoutAddress+' entreprise(s) sans adresse ne sont pas affichées (ajoutez-la dans l’onglet Infos).') : '';
+  const baseStatus = withoutAddress>0 ? (withoutAddress+' établissement(s) sans adresse ne sont pas affichés (ajoutez-la dans l’onglet Infos).') : '';
   statusEl.textContent = baseStatus;
 
   if(toGeocode.length>0 && !geocodingInProgress){
@@ -952,7 +1065,7 @@ async function renderEntreprisesMap(companies){
           c.geo_lat = lat; c.geo_lng = lng;
           plot(c);
         }
-      }catch(e){ /* adresse non trouvée, on passe à la suivante */ }
+      }catch(e){ /* adresse non trouvée (géocodage impossible) : on passe à la suivante, jamais d'invention de position */ }
       await new Promise(r=>setTimeout(r, 1100));
     }
     geocodingInProgress = false;
@@ -1038,16 +1151,18 @@ function renderNotesFeed(container, opts){
     const composer = el('div','feed-composer');
     const ta = document.createElement('textarea'); ta.placeholder='Écrire une note…';
     const row = el('div','feed-composer-row');
+    const typeSel = document.createElement('select');
+    D.eventTypes.forEach(t=>{ const op=el('option',null,t); op.value=t; typeSel.appendChild(op); });
     const authSel = document.createElement('select');
     D.owners.forEach(o=>{ const op=el('option',null,o); op.value=o; authSel.appendChild(op); });
     const btn = el('button','btn btn-sm btn-primary','Ajouter');
     btn.addEventListener('click', async ()=>{
       const texte = ta.value.trim(); if(!texte) return;
       btn.disabled = true;
-      try{ await opts.onAddNote(texte, authSel.value); ta.value=''; }
+      try{ await opts.onAddNote(texte, authSel.value, typeSel.value); ta.value=''; }
       finally{ btn.disabled = false; }
     });
-    row.appendChild(authSel); row.appendChild(btn);
+    row.appendChild(typeSel); row.appendChild(authSel); row.appendChild(btn);
     composer.appendChild(ta); composer.appendChild(row);
     container.appendChild(composer);
   }
@@ -1057,7 +1172,8 @@ function renderNotesFeed(container, opts){
   items.forEach(it=>{
     const row = el('div','feed-item');
     const head = el('div','feed-item-head');
-    head.appendChild(el('span','feed-auteur', it.auteur||'—'));
+    const auteurSpan = el('span','feed-auteur', (it.type ? it.type+' · ' : '') + (it.auteur||'—'));
+    head.appendChild(auteurSpan);
     head.appendChild(el('span','feed-date', fmtDateTimeDisplay(it.date)));
     row.appendChild(head);
     row.appendChild(el('div','feed-text', it.texte));
@@ -1176,8 +1292,10 @@ function openCompanyDetail(id){
   }
   fieldIn(details, 'instagram', 'Instagram (@handle)');
   fieldIn(details, 'site_web', 'Site web', 'url');
+  fieldIn(details, 'email', 'Email', 'email');
   fieldIn(details, 'localisation', 'Adresse (pour la carte)');
   fieldIn(details, 'ville_pays', 'Ville / Pays');
+  select('canal','Canal de distribution', D.canaux, details);
   select('objectif','Objectif', D.objectifs, details);
   const dOld = document.createElement('div'); dOld.appendChild(el('label',null,'Dernier contact')); const iOld=document.createElement('input'); iOld.type='date'; iOld.value=parseISODate(lead.dernier_contact)?lead.dernier_contact:''; dOld.className='field'; dOld.appendChild(iOld);
   details.appendChild(dOld); fields.dernier_contact=iOld;
@@ -1219,16 +1337,16 @@ function openCompanyDetail(id){
   const notesBox = el('div'); panelNotes.appendChild(notesBox);
   let currentNotes = parseLog(lead.notes_log);
   function renderCompanyNotes(){
-    const ownNotes = currentNotes.map(n=>({date:n.date, auteur:n.auteur, texte:n.texte}));
+    const ownNotes = currentNotes.map(n=>({date:n.date, auteur:n.auteur, texte:n.texte, type:n.type}));
     const contactNotes = [];
     linked.forEach(c=>{
-      parseLog(c.notes_log).forEach(n=> contactNotes.push({date:n.date, auteur:n.auteur, texte:n.texte, source:'via le contact '+(c.nom||'(sans nom)')}));
+      parseLog(c.notes_log).forEach(n=> contactNotes.push({date:n.date, auteur:n.auteur, texte:n.texte, type:n.type, source:'via le contact '+(c.nom||'(sans nom)')}));
     });
     renderNotesFeed(notesBox, {
       notes: ownNotes.concat(contactNotes),
       legacyNote: lead.detail,
-      onAddNote: async (texte, auteur)=>{
-        const next = currentNotes.concat([{date:new Date().toISOString(), auteur, texte}]);
+      onAddNote: async (texte, auteur, type)=>{
+        const next = currentNotes.concat([{date:new Date().toISOString(), auteur, texte, type}]);
         await updateDoc('Entreprises', id, {notes_log: JSON.stringify(next)});
         currentNotes = next; renderCompanyNotes(); toast('Note ajoutée');
       }
@@ -1246,6 +1364,10 @@ function openCompanyDetail(id){
     const patch = {};
     Object.keys(fields).forEach(k=>{ let v = fields[k].value; if(k==='valeur') v = Number(v)||0; patch[k]=v; });
     patch.owners = Array.from(ownerWrap.querySelectorAll('input:checked')).map(c=>c.value).join(', ');
+    if(patch.stage && patch.stage!==lead.stage){
+      currentNotes = currentNotes.concat([{date:new Date().toISOString(), auteur:'Système', texte:'Changement de statut : '+(lead.stage||'—')+' → '+patch.stage, type:'Changement de statut'}]);
+      patch.notes_log = JSON.stringify(currentNotes);
+    }
     try{ await updateDoc('Entreprises', id, patch); toast('Entreprise mise à jour'); closeModal(); }
     catch(e){ /* toast already shown */ }
   });
@@ -1333,8 +1455,8 @@ function openContactModal(contact, presetCompanyId){
       renderNotesFeed(notesBox, {
         notes: currentNotes,
         legacyNote: contact.notes,
-        onAddNote: async (texte, auteur)=>{
-          const next = currentNotes.concat([{date:new Date().toISOString(), auteur, texte}]);
+        onAddNote: async (texte, auteur, type)=>{
+          const next = currentNotes.concat([{date:new Date().toISOString(), auteur, texte, type}]);
           await updateDoc('Contacts', contact.id, {notes_log: JSON.stringify(next)});
           currentNotes = next; renderContactNotes(); toast('Note ajoutée');
         }

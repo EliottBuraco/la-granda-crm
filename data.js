@@ -1,23 +1,23 @@
 window.STATIC_DATA = {
 "stageOrder": [
-"Prospection",
-"Qualification",
-"Négociation",
+"À prospecter",
+"Contacté",
+"Qualifié",
+"Intéressé",
+"Échantillon / Offre envoyé",
+"Première commande",
 "Client actif",
 "Perdu"
 ],
-"stageColor": {
-"Prospection": "pink",
-"Qualification": "red",
-"Négociation": "maroon",
-"Client actif": "black",
-"Perdu": "gray"
-},
 "personas": [
 "Restaurateur",
 "Épicerie",
+"Hôtel",
+"Distributeur",
+"Grossiste",
 "Micro-influenceur",
-"Académie/Club"
+"Académie/Club",
+"Autre"
 ],
 "priorites": [
 "High",
@@ -34,11 +34,32 @@ window.STATIC_DATA = {
 "Geoff",
 "Clem"
 ],
+"canaux": [
+"Direct",
+"Distributeur",
+"Grossiste",
+"Épicerie partenaire",
+"Marché / évènement",
+"Site web",
+"Autre"
+],
 "canauxB2C": [
 "Site web",
 "Marché / évènement",
 "Boutique revendeur",
 "Bouche à oreille",
+"Autre"
+],
+"eventTypes": [
+"Note",
+"Appel",
+"Visite",
+"Email",
+"Message",
+"Compte rendu",
+"Échantillon remis",
+"Relance",
+"Tâche",
 "Autre"
 ]
 };
