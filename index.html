@@ -6,29 +6,31 @@
 <title>La Granda CRM</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Permanent+Marker&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 /* Light by default, always — dark only when the user flips the switch (data-theme="dark" on <html>). No prefers-color-scheme auto-detect. */
 :root{
   --bg:#FFFFFF; --surface:#FFFFFF; --surface-2:#F7F7F5; --surface-3:#EFEDE8;
-  --text:#141414; --text-muted:#6B6B6B; --border:#E7E4DD; --border-soft:#E7E4DD; --border-strong:#141414;
+  --text:#141414; --text-muted:#6B6B6B; --border:#141414; --border-soft:#E7E4DD; --border-strong:#141414;
   --primary:#FF3B2E; --primary-dark:#C22A20; --primary-tint:#FFE7E3;
   --success:#1FAE63; --warn:#FFB400;
   --phase-prospection:#1FAE63; --phase-qualification:#FF8A1E; --phase-negociation:#9B5DE5;
   --phase-actif-bg:#141414; --phase-actif-fg:#FFFFFF;
   --phase-perdu-bg:#EFEDE8; --phase-perdu-fg:#6B6B6B;
-  --radius:12px; --radius-sm:8px; --radius-pill:999px;
-  --shadow:0 10px 28px rgba(20,20,20,.09); --shadow-sm:0 2px 10px rgba(20,20,20,.06);
+  --radius:6px; --radius-sm:4px; --radius-pill:6px;
+  --shadow:5px 5px 0 #141414; --shadow-sm:3px 3px 0 #141414;
   --font-display:'Archivo Black',Impact,sans-serif; --font-logo:'Permanent Marker',cursive; --font-body:'Inter',system-ui,sans-serif;
 }
 :root[data-theme="dark"]{
   --bg:#141414; --surface:#1C1C1C; --surface-2:#232323; --surface-3:#2B2B2B;
-  --text:#F2F0EC; --text-muted:#A6A29A; --border:#333131; --border-soft:#333131; --border-strong:#F2F0EC;
+  --text:#F2F0EC; --text-muted:#A6A29A; --border:#F2F0EC; --border-soft:#333131; --border-strong:#F2F0EC;
   --primary:#FF6B5A; --primary-dark:#E8392E; --primary-tint:#3A201C;
   --success:#38C27F; --warn:#FFC94D;
   --phase-prospection:#38C27F; --phase-qualification:#FFA64D; --phase-negociation:#B98CF0;
   --phase-actif-bg:#F2F0EC; --phase-actif-fg:#141414;
   --phase-perdu-bg:#2B2B2B; --phase-perdu-fg:#9A968E;
-  --shadow:0 10px 28px rgba(0,0,0,.45); --shadow-sm:0 2px 10px rgba(0,0,0,.35);
+  --shadow:5px 5px 0 rgba(0,0,0,.55); --shadow-sm:3px 3px 0 rgba(0,0,0,.55);
 }
 *{box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.45;}
@@ -61,8 +63,8 @@ main{flex:1;min-width:0;padding:28px 32px;width:100%;}
 .view.active{display:block;}
 #view-pipeline{max-width:none;}
 
-.card{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);box-shadow:var(--shadow-sm);}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:11px 18px;border-radius:var(--radius);border:1.5px solid var(--border-strong);background:var(--surface);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;}
+.card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:11px 18px;border-radius:var(--radius);border:1.5px solid var(--border-strong);background:var(--surface);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;box-shadow:var(--shadow-sm);}
 .btn:hover{background:var(--surface-2);}
 .btn-primary{background:var(--primary);border-color:var(--primary);color:#fff;}
 .btn-primary:hover{background:var(--primary-dark);border-color:var(--primary-dark);color:#fff;}
@@ -88,6 +90,11 @@ a{color:var(--primary);}
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px;}
 .toolbar select, .toolbar input[type=search]{width:auto;min-width:120px;}
 .toolbar .spacer{flex:1;}
+.filter-wrap{position:relative;}
+.filter-count{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;background:var(--primary);color:#fff;border-radius:50%;font-size:10px;font-weight:800;margin-left:6px;}
+.filter-panel{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1.5px solid var(--border);box-shadow:var(--shadow-sm);padding:14px;border-radius:var(--radius);display:flex;flex-direction:column;gap:10px;min-width:220px;z-index:50;}
+.filter-panel.hidden{display:none;}
+.filter-panel select{width:100%;min-width:0;}
 
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px;}
 .kpi{padding:18px 20px;}
@@ -127,8 +134,9 @@ a{color:var(--primary);}
 .kanban-col-head .n{font-size:11px;color:var(--text-muted);font-weight:700;}
 .stage-dot{width:10px;height:10px;border-radius:50%;flex:none;}
 .kanban-col-body{flex:1;padding:12px;min-height:120px;display:flex;flex-direction:column;gap:10px;}
-.kcard{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius-sm);padding:14px 16px;cursor:pointer;}
-.kcard:hover{box-shadow:var(--shadow-sm);}
+.kcard{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .1s ease,box-shadow .1s ease;}
+.kcard:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 #141414;}
+:root[data-theme="dark"] .kcard:hover{box-shadow:5px 5px 0 rgba(0,0,0,.55);}
 .kcard .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
 .kcard .nom{font-weight:700;font-size:14.5px;}
 .kcard .meta{font-size:12px;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
@@ -139,22 +147,40 @@ th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.04e
 td{padding:9px 10px;border-bottom:1px solid var(--border-soft);vertical-align:middle;}
 tr.leadrow{cursor:pointer;}
 tr.leadrow:hover{background:var(--surface-2);}
-.table-wrap{overflow-x:auto;border:1px solid var(--border-soft);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow-sm);}
+.table-wrap{overflow-x:auto;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow-sm);}
+.view-toggle{display:flex;border:1.5px solid var(--border-strong);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);}
+.view-toggle button{padding:10px 16px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;background:var(--surface);border:none;border-right:1.5px solid var(--border-strong);}
+.view-toggle button:last-child{border-right:none;}
+.view-toggle button.active{background:var(--text);color:var(--bg);}
+.map-wrap{border:1.5px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;background:var(--surface);}
+#entreprisesMap{height:560px;width:100%;}
+.map-status{padding:9px 14px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border-soft);}
+.map-popup .nom{font-weight:800;font-size:13px;margin-bottom:2px;}
+.map-popup .muted{font-size:11.5px;}
+.map-popup button{margin-top:6px;}
 .table-wrap table{min-width:760px;}
 .stage-chip{display:inline-block;padding:3px 8px;border-radius:var(--radius);font-size:10px;font-weight:800;text-transform:uppercase;border:1px solid var(--border);}
 
 .overlay{position:fixed;inset:0;background:rgba(10,10,10,.5);z-index:90;display:flex;justify-content:flex-end;}
 .overlay.center{justify-content:center;align-items:center;}
-.drawer{width:min(440px,92vw);background:var(--surface);height:100%;overflow-y:auto;padding:22px;box-shadow:var(--shadow);transition:width .15s ease;}
-.drawer.expanded{width:min(980px,94vw);}
+.drawer{width:min(440px,92vw);background:var(--surface);height:100%;overflow-y:auto;padding:22px;border-left:1.5px solid var(--border);}
+.drawer.expanded{position:fixed;inset:0;width:100%;height:100%;border-left:none;padding:32px clamp(20px,6vw,56px);z-index:95;}
 .modal{width:min(400px,92vw);background:var(--surface);border-radius:var(--radius);border:1.5px solid var(--border);padding:22px;box-shadow:var(--shadow);}
 .drawer-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:10px;}
 .drawer-head h2{font-size:18px;margin:0;text-transform:none;font-family:var(--font-body);font-weight:800;}
+.drawer.expanded .drawer-head h2{font-size:26px;}
 .drawer-head-actions{display:flex;align-items:center;gap:2px;flex:none;}
 .close-x,.expand-btn{background:none;border:none;font-size:18px;color:var(--text-muted);line-height:1;padding:4px 6px;}
 .close-x:hover,.expand-btn:hover{color:var(--text);}
 .expand-btn{font-size:15px;}
-.drawer.expanded .drawer-body{display:grid;grid-template-columns:1fr 1fr;gap:0 32px;align-items:start;}
+.drawer-tabs{display:none;gap:4px;margin-bottom:24px;border-bottom:1.5px solid var(--border);}
+.drawer.expanded .drawer-tabs{display:flex;}
+.drawer-tab{padding:10px 20px;font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;color:var(--text-muted);background:transparent;border:none;border-bottom:3px solid transparent;margin-bottom:-1.5px;}
+.drawer-tab:hover{color:var(--text);}
+.drawer-tab.active{color:var(--text);border-bottom-color:var(--primary);}
+.drawer-panel{display:block;}
+.drawer.expanded .drawer-panel{display:none;max-width:760px;margin:0 auto;}
+.drawer.expanded .drawer-panel.active{display:block;}
 .section-title{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:18px 0 10px;border-top:1px solid var(--border-soft);padding-top:14px;}
 .section-title:first-of-type{border-top:none;margin-top:0;padding-top:0;}
 .drawer-footer{display:flex;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid var(--border-soft);}
@@ -188,6 +214,7 @@ details.more[open] summary{color:var(--text);}
 .feed-auteur{font-weight:800;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;}
 .feed-date{font-size:10.5px;color:var(--text-muted);white-space:nowrap;}
 .feed-text{font-size:13px;white-space:pre-wrap;}
+.feed-source{font-size:10.5px;color:var(--text-muted);margin-top:4px;font-style:italic;}
 
 .tournee-city{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:18px 0 8px;}
 .tournee-city:first-child{margin-top:0;}
@@ -271,11 +298,15 @@ details.more[open] summary{color:var(--text);}
 
     <section class="view" id="view-entreprises">
       <div class="toolbar" id="entreprisesToolbar"></div>
-      <div class="table-wrap">
+      <div class="table-wrap" id="entreprisesTableWrap">
         <table>
           <thead><tr><th>Entreprise</th><th>Persona</th><th>Étape</th><th>Priorité</th><th>Owner</th><th>Prochaine action</th><th>Valeur</th></tr></thead>
           <tbody id="entreprisesTbody"></tbody>
         </table>
+      </div>
+      <div class="map-wrap hidden" id="entreprisesMapWrap">
+        <div id="entreprisesMap"></div>
+        <div class="map-status" id="entreprisesMapStatus"></div>
       </div>
     </section>
 
@@ -430,6 +461,7 @@ const state = {
   companyFilters: { search:'', persona:'', owner:'', priorite:'', objectif:'' },
   contactsSearch: '', b2cSearch: '',
   tourneeFilters: { search:'', ville:'' },
+  entreprisesViewMode: 'liste',
   ready: false,
 };
 let tourneeSelected = new Set();
@@ -523,6 +555,9 @@ document.getElementById('tabs').addEventListener('click', e=>{
   document.getElementById('view-'+state.activeView).classList.add('active');
   renderCurrentView();
 });
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.filter-wrap')){ document.querySelectorAll('.filter-panel').forEach(p=>p.classList.add('hidden')); }
+});
 
 /* ---------------- filter toolbar ---------------- */
 function renderCompanyFilterToolbar(container, opts){
@@ -535,6 +570,7 @@ function renderCompanyFilterToolbar(container, opts){
   }, 300);
   search.addEventListener('input', e=>{ state.companyFilters.search=e.target.value; triggerCompanySearch(); });
   container.appendChild(search);
+  container.appendChild(el('div','spacer'));
   function mkSelect(key, values, label){
     const s = document.createElement('select');
     const opt0 = el('option', null, label); opt0.value=''; s.appendChild(opt0);
@@ -542,11 +578,34 @@ function renderCompanyFilterToolbar(container, opts){
     s.addEventListener('change', e=>{ state.companyFilters[key]=e.target.value; renderCurrentView(); });
     return s;
   }
-  container.appendChild(mkSelect('persona', D.personas, 'Toutes personas'));
-  container.appendChild(mkSelect('owner', D.owners, 'Tous owners'));
-  container.appendChild(mkSelect('priorite', D.priorites, 'Toutes priorités'));
-  container.appendChild(mkSelect('objectif', D.objectifs, 'Tous objectifs'));
-  container.appendChild(el('div','spacer'));
+  const activeCount = ['persona','owner','priorite','objectif'].filter(k=>state.companyFilters[k]).length;
+  const filterWrap = el('div','filter-wrap');
+  const filterBtn = el('button','btn filter-btn');
+  filterBtn.appendChild(document.createTextNode('Filtres'));
+  if(activeCount>0) filterBtn.appendChild(el('span','filter-count', String(activeCount)));
+  const panel = el('div','filter-panel hidden');
+  panel.appendChild(mkSelect('persona', D.personas, 'Toutes personas'));
+  panel.appendChild(mkSelect('owner', D.owners, 'Tous owners'));
+  panel.appendChild(mkSelect('priorite', D.priorites, 'Toutes priorités'));
+  panel.appendChild(mkSelect('objectif', D.objectifs, 'Tous objectifs'));
+  filterBtn.addEventListener('click', e=>{
+    e.stopPropagation();
+    const willOpen = panel.classList.contains('hidden');
+    document.querySelectorAll('.filter-panel').forEach(p=>p.classList.add('hidden'));
+    if(willOpen) panel.classList.remove('hidden');
+  });
+  panel.addEventListener('click', e=> e.stopPropagation());
+  filterWrap.appendChild(filterBtn); filterWrap.appendChild(panel);
+  container.appendChild(filterWrap);
+  if(opts && opts.viewToggle){
+    const toggle = el('div','view-toggle');
+    const btnListe = el('button', state.entreprisesViewMode==='liste'?'active':'', 'Liste');
+    const btnCarte = el('button', state.entreprisesViewMode==='carte'?'active':'', 'Carte');
+    btnListe.addEventListener('click', ()=>{ state.entreprisesViewMode='liste'; renderEntreprises(); });
+    btnCarte.addEventListener('click', ()=>{ state.entreprisesViewMode='carte'; renderEntreprises(); });
+    toggle.appendChild(btnListe); toggle.appendChild(btnCarte);
+    container.appendChild(toggle);
+  }
   if(opts && opts.addButton){
     const btn = el('button','btn btn-primary','+ Nouvelle entreprise');
     btn.addEventListener('click', openAddCompanyModal);
@@ -798,9 +857,19 @@ function renderTourneeBar(){
 
 /* ---------------- ENTREPRISES ---------------- */
 function renderEntreprises(){
-  renderCompanyFilterToolbar(document.getElementById('entreprisesToolbar'), {addButton:true});
-  const tbody = document.getElementById('entreprisesTbody'); tbody.innerHTML='';
+  renderCompanyFilterToolbar(document.getElementById('entreprisesToolbar'), {addButton:true, viewToggle:true});
   const companies = getFilteredCompanies().slice().sort((a,b)=>(a.nom||'').localeCompare(b.nom||''));
+
+  if(state.entreprisesViewMode==='carte'){
+    document.getElementById('entreprisesTableWrap').classList.add('hidden');
+    document.getElementById('entreprisesMapWrap').classList.remove('hidden');
+    renderEntreprisesMap(companies);
+    return;
+  }
+  document.getElementById('entreprisesTableWrap').classList.remove('hidden');
+  document.getElementById('entreprisesMapWrap').classList.add('hidden');
+
+  const tbody = document.getElementById('entreprisesTbody'); tbody.innerHTML='';
   if(companies.length===0){
     const tr = document.createElement('tr'); const td = document.createElement('td');
     td.colSpan=7; td.className='empty'; td.textContent='Aucune entreprise ne correspond aux filtres.';
@@ -829,6 +898,66 @@ function renderEntreprises(){
     tr.appendChild(el('td',null, l.valeur ? fmtMoney(l.valeur) : '—'));
     tbody.appendChild(tr);
   });
+}
+
+let leafletMap = null;
+let leafletMarkersLayer = null;
+let geocodingInProgress = false;
+async function renderEntreprisesMap(companies){
+  const statusEl = document.getElementById('entreprisesMapStatus');
+  if(!leafletMap){
+    leafletMap = L.map('entreprisesMap').setView([43.66, -1.42], 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    }).addTo(leafletMap);
+    leafletMarkersLayer = L.layerGroup().addTo(leafletMap);
+  } else {
+    leafletMap.invalidateSize();
+  }
+  leafletMarkersLayer.clearLayers();
+
+  const withAddress = companies.filter(c=>c.localisation);
+  const withoutAddress = companies.length - withAddress.length;
+  const geocoded = withAddress.filter(c=>c.geo_lat && c.geo_lng);
+  const toGeocode = withAddress.filter(c=>!(c.geo_lat && c.geo_lng));
+
+  function plot(c){
+    const marker = L.marker([Number(c.geo_lat), Number(c.geo_lng)]);
+    const popup = document.createElement('div'); popup.className='map-popup';
+    popup.appendChild(el('div','nom', c.nom||'(sans nom)'));
+    popup.appendChild(el('div','muted', [c.persona, c.stage].filter(Boolean).join(' · ')));
+    const btn = el('button','btn btn-sm','Ouvrir');
+    btn.addEventListener('click', ()=> openCompanyDetail(c.id));
+    popup.appendChild(btn);
+    marker.bindPopup(popup);
+    marker.addTo(leafletMarkersLayer);
+  }
+  geocoded.forEach(plot);
+
+  const baseStatus = withoutAddress>0 ? (withoutAddress+' entreprise(s) sans adresse ne sont pas affichées (ajoutez-la dans l’onglet Infos).') : '';
+  statusEl.textContent = baseStatus;
+
+  if(toGeocode.length>0 && !geocodingInProgress){
+    geocodingInProgress = true;
+    for(const c of toGeocode){
+      statusEl.textContent = 'Géocodage des adresses en cours… ('+(toGeocode.indexOf(c)+1)+'/'+toGeocode.length+')';
+      try{
+        const q = encodeURIComponent(c.localisation+(c.localisation.toLowerCase().includes('france')?'':', France'));
+        const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+q, {headers:{'Accept-Language':'fr'}});
+        const data = await res.json();
+        if(data && data[0]){
+          const lat = data[0].lat, lng = data[0].lon;
+          await updateDoc('Entreprises', c.id, {geo_lat: lat, geo_lng: lng});
+          c.geo_lat = lat; c.geo_lng = lng;
+          plot(c);
+        }
+      }catch(e){ /* adresse non trouvée, on passe à la suivante */ }
+      await new Promise(r=>setTimeout(r, 1100));
+    }
+    geocodingInProgress = false;
+    statusEl.textContent = baseStatus;
+  }
 }
 function openAddCompanyModal(){
   const root = document.getElementById('modalRoot'); root.innerHTML='';
@@ -866,14 +995,14 @@ function openAddCompanyModal(){
 function closeModal(){ document.getElementById('modalRoot').innerHTML=''; }
 
 /* ---------------- notes & order-history feed (used by company + contact detail) ---------------- */
-function renderFeed(container, opts){
+function renderCommandesList(container, opts){
   container.innerHTML = '';
   if(opts.onAddCommande){
     const cForm = el('div','feed-composer-commande');
     const dField = el('div','mini-field'); dField.appendChild(el('label',null,'Date')); const dInput=document.createElement('input'); dInput.type='date'; dInput.value=todayISO(); dField.appendChild(dInput);
     const mField = el('div','mini-field'); mField.appendChild(el('label',null,'Montant (€)')); const mInput=document.createElement('input'); mInput.type='number'; mInput.step='0.01'; mField.appendChild(mInput);
     const tField = el('div','mini-field grow'); tField.appendChild(el('label',null,'Détail')); const tInput=document.createElement('input'); tInput.type='text'; tInput.placeholder='2x Piri Piri, 1x Sriracha…'; tField.appendChild(tInput);
-    const addBtn = el('button','btn btn-sm','+ Commande');
+    const addBtn = el('button','btn btn-sm btn-primary','+ Commande');
     addBtn.addEventListener('click', async ()=>{
       if(!dInput.value){ toast('Date requise'); return; }
       addBtn.disabled = true;
@@ -883,6 +1012,28 @@ function renderFeed(container, opts){
     cForm.appendChild(dField); cForm.appendChild(mField); cForm.appendChild(tField); cForm.appendChild(addBtn);
     container.appendChild(cForm);
   }
+  const items = (opts.commandes||[]).slice().sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+  const list = el('div','feed');
+  if(items.length===0 && !opts.legacyCommande){ list.appendChild(el('div','muted','Aucune commande enregistrée.')); }
+  items.forEach(it=>{
+    const row = el('div','feed-item feed-item-commande');
+    const head = el('div','feed-item-head');
+    head.appendChild(el('span','feed-auteur','🧾 Commande'));
+    head.appendChild(el('span','feed-date', fmtDateDisplay(it.date)));
+    row.appendChild(head);
+    row.appendChild(el('div','feed-text', fmtMoney(it.montant||0) + (it.detail?(' — '+it.detail):'')));
+    list.appendChild(row);
+  });
+  if(opts.legacyCommande){
+    const row = el('div','feed-item feed-item-commande feed-item-legacy');
+    row.appendChild(el('div','feed-auteur','🧾 Anciennes commandes'));
+    row.appendChild(el('div','feed-text', opts.legacyCommande));
+    list.appendChild(row);
+  }
+  container.appendChild(list);
+}
+function renderNotesFeed(container, opts){
+  container.innerHTML = '';
   if(opts.onAddNote){
     const composer = el('div','feed-composer');
     const ta = document.createElement('textarea'); ta.placeholder='Écrire une note…';
@@ -900,29 +1051,19 @@ function renderFeed(container, opts){
     composer.appendChild(ta); composer.appendChild(row);
     container.appendChild(composer);
   }
-
-  const items = [];
-  (opts.notes||[]).forEach(n=> items.push({date:n.date||'', type:'note', auteur:n.auteur, texte:n.texte}));
-  (opts.commandes||[]).forEach(c=> items.push({date:c.date||'', type:'commande', montant:c.montant, texte:c.detail}));
-  items.sort((a,b)=> (b.date||'').localeCompare(a.date||''));
-
+  const items = (opts.notes||[]).slice().sort((a,b)=> (b.date||'').localeCompare(a.date||''));
   const list = el('div','feed');
-  if(items.length===0 && !opts.legacyNote && !opts.legacyCommande){ list.appendChild(el('div','muted','Aucune note pour le moment.')); }
+  if(items.length===0 && !opts.legacyNote){ list.appendChild(el('div','muted','Aucune note pour le moment.')); }
   items.forEach(it=>{
-    const row = el('div','feed-item'+(it.type==='commande'?' feed-item-commande':''));
+    const row = el('div','feed-item');
     const head = el('div','feed-item-head');
-    head.appendChild(el('span','feed-auteur', it.type==='commande' ? '🧾 Commande' : (it.auteur||'—')));
-    head.appendChild(el('span','feed-date', it.type==='commande' ? fmtDateDisplay(it.date) : fmtDateTimeDisplay(it.date)));
+    head.appendChild(el('span','feed-auteur', it.auteur||'—'));
+    head.appendChild(el('span','feed-date', fmtDateTimeDisplay(it.date)));
     row.appendChild(head);
-    row.appendChild(el('div','feed-text', it.type==='commande' ? (fmtMoney(it.montant||0) + (it.texte?(' — '+it.texte):'')) : it.texte));
+    row.appendChild(el('div','feed-text', it.texte));
+    if(it.source) row.appendChild(el('div','feed-source', it.source));
     list.appendChild(row);
   });
-  if(opts.legacyCommande){
-    const row = el('div','feed-item feed-item-commande feed-item-legacy');
-    row.appendChild(el('div','feed-auteur','🧾 Anciennes commandes'));
-    row.appendChild(el('div','feed-text', opts.legacyCommande));
-    list.appendChild(row);
-  }
   if(opts.legacyNote){
     const row = el('div','feed-item feed-item-legacy');
     row.appendChild(el('div','feed-auteur','Ancienne note'));
@@ -945,6 +1086,29 @@ function addDrawerExpandToggle(head, drawer){
   head.appendChild(actions);
   return actions;
 }
+function buildDrawerTabs(drawer, tabs){
+  const bar = el('div','drawer-tabs');
+  const panels = {};
+  const buttons = {};
+  tabs.forEach((t,i)=>{
+    const btn = el('button','drawer-tab'+(i===0?' active':''), t.label);
+    btn.addEventListener('click', ()=>{
+      Object.keys(buttons).forEach(k=> buttons[k].classList.toggle('active', k===t.id));
+      Object.keys(panels).forEach(k=> panels[k].classList.toggle('active', k===t.id));
+    });
+    buttons[t.id] = btn;
+    bar.appendChild(btn);
+  });
+  drawer.appendChild(bar);
+  return {
+    registerPanel:(id, node)=>{
+      node.classList.add('drawer-panel');
+      if(id===tabs[0].id) node.classList.add('active');
+      panels[id] = node;
+      drawer.appendChild(node);
+    }
+  };
+}
 
 function openCompanyDetail(id){
   const lead = state.companies.find(l=>l.id===id);
@@ -957,48 +1121,52 @@ function openCompanyDetail(id){
   addDrawerExpandToggle(head, drawer);
   drawer.appendChild(head);
 
-  const body = el('div','drawer-body');
-  const colLeft = el('div','drawer-col-left');
-  const colRight = el('div','drawer-col-right');
-  body.appendChild(colLeft); body.appendChild(colRight);
-  drawer.appendChild(body);
+  const tabsApi = buildDrawerTabs(drawer, [
+    {id:'infos', label:'Infos'}, {id:'commandes', label:'Commandes'}, {id:'notes', label:'Notes'}
+  ]);
+  const panelInfos = el('div');
+  const panelCommandes = el('div');
+  const panelNotes = el('div');
+  tabsApi.registerPanel('infos', panelInfos);
+  tabsApi.registerPanel('commandes', panelCommandes);
+  tabsApi.registerPanel('notes', panelNotes);
 
   const fields = {};
-  function section(title, target){ (target||colLeft).appendChild(el('div','section-title',title)); }
+  function section(title, target){ (target||panelInfos).appendChild(el('div','section-title',title)); }
   function field(key, labelText, type, target){
     const f = el('div','field'); f.appendChild(el('label',null,labelText));
     const input = type==='textarea' ? document.createElement('textarea') : document.createElement('input');
     if(type!=='textarea') input.type = type || 'text';
     input.value = lead[key] || '';
-    f.appendChild(input); (target||colLeft).appendChild(f); fields[key]=input; return input;
+    f.appendChild(input); (target||panelInfos).appendChild(f); fields[key]=input; return input;
   }
   function select(key, labelText, options, target){
     const f = el('div','field'); f.appendChild(el('label',null,labelText));
     const s = document.createElement('select');
     const blank = el('option',null,'—'); blank.value=''; s.appendChild(blank);
     options.forEach(o=>{ const op=el('option',null,o); op.value=o; if(lead[key]===o) op.selected=true; s.appendChild(op); });
-    f.appendChild(s); (target||colLeft).appendChild(f); fields[key]=s; return s;
+    f.appendChild(s); (target||panelInfos).appendChild(f); fields[key]=s; return s;
   }
 
   field('nom','Nom');
   const fRow1 = el('div','field-row');
-  select('persona','Persona', D.personas); const personaField = colLeft.lastChild; fRow1.appendChild(personaField);
-  select('stage','Étape', STAGE_ORDER); const stageField = colLeft.lastChild; fRow1.appendChild(stageField);
-  colLeft.appendChild(fRow1);
+  select('persona','Persona', D.personas); const personaField = panelInfos.lastChild; fRow1.appendChild(personaField);
+  select('stage','Étape', STAGE_ORDER); const stageField = panelInfos.lastChild; fRow1.appendChild(stageField);
+  panelInfos.appendChild(fRow1);
   const fRow2 = el('div','field-row');
-  select('priorite','Priorité', D.priorites); const prioField = colLeft.lastChild; fRow2.appendChild(prioField);
+  select('priorite','Priorité', D.priorites); const prioField = panelInfos.lastChild; fRow2.appendChild(prioField);
   const fNext = document.createElement('div'); fNext.appendChild(el('label',null,'Prochaine action')); const iNext=document.createElement('input'); iNext.type='date'; iNext.value=parseISODate(lead.date_prochaine_action)?lead.date_prochaine_action:''; fNext.appendChild(iNext);
-  fRow2.appendChild(fNext); colLeft.appendChild(fRow2);
+  fRow2.appendChild(fNext); panelInfos.appendChild(fRow2);
   fields.date_prochaine_action=iNext;
   const ownerWrap = el('div','check-row');
   const currentOwners = ownersList(lead.owners);
   D.owners.forEach(o=>{ const lbl=document.createElement('label'); const cb=document.createElement('input'); cb.type='checkbox'; cb.value=o; cb.checked=currentOwners.includes(o); lbl.appendChild(cb); lbl.appendChild(document.createTextNode(o)); ownerWrap.appendChild(lbl); });
-  const fOwner = el('div','field'); fOwner.appendChild(el('label',null,'Owner(s)')); fOwner.appendChild(ownerWrap); colLeft.appendChild(fOwner);
+  const fOwner = el('div','field'); fOwner.appendChild(el('label',null,'Owner(s)')); fOwner.appendChild(ownerWrap); panelInfos.appendChild(fOwner);
   field('valeur','Valeur (€)','number');
 
   const details = document.createElement('details'); details.className='more';
   const summary = document.createElement('summary'); summary.textContent='Plus de détails'; details.appendChild(summary);
-  colLeft.appendChild(details);
+  panelInfos.appendChild(details);
   function fieldIn(container, key, labelText, type){
     const f = el('div','field'); f.appendChild(el('label',null,labelText));
     const input = type==='textarea' ? document.createElement('textarea') : document.createElement('input');
@@ -1026,35 +1194,47 @@ function openCompanyDetail(id){
     row.appendChild(openBtn);
     contactsBox.appendChild(row);
   });
-  colLeft.appendChild(contactsBox);
+  panelInfos.appendChild(contactsBox);
   const addContactBtn = el('button','btn btn-sm','+ Ajouter un contact'); addContactBtn.style.marginTop='8px';
   addContactBtn.addEventListener('click', ()=>openContactModal(null, id));
-  colLeft.appendChild(addContactBtn);
+  panelInfos.appendChild(addContactBtn);
 
-  section('Historique & notes', colRight);
-  const feedBox = el('div');
-  colRight.appendChild(feedBox);
-  let currentNotes = parseLog(lead.notes_log);
+  panelCommandes.appendChild(el('div','section-title drawer-panel-label','Commandes'));
+  const commandesBox = el('div'); panelCommandes.appendChild(commandesBox);
   let currentCommandes = parseLog(lead.commandes_log);
-  function renderCompanyFeed(){
-    renderFeed(feedBox, {
-      notes: currentNotes,
+  function renderCompanyCommandes(){
+    renderCommandesList(commandesBox, {
       commandes: currentCommandes,
-      legacyNote: lead.detail,
       legacyCommande: lead.commandes,
-      onAddNote: async (texte, auteur)=>{
-        const next = currentNotes.concat([{date:new Date().toISOString(), auteur, texte}]);
-        await updateDoc('Entreprises', id, {notes_log: JSON.stringify(next)});
-        currentNotes = next; renderCompanyFeed(); toast('Note ajoutée');
-      },
       onAddCommande: async (data)=>{
         const next = currentCommandes.concat([data]);
         await updateDoc('Entreprises', id, {commandes_log: JSON.stringify(next)});
-        currentCommandes = next; renderCompanyFeed(); toast('Commande ajoutée');
+        currentCommandes = next; renderCompanyCommandes(); toast('Commande ajoutée');
       }
     });
   }
-  renderCompanyFeed();
+  renderCompanyCommandes();
+
+  panelNotes.appendChild(el('div','section-title drawer-panel-label','Notes'));
+  const notesBox = el('div'); panelNotes.appendChild(notesBox);
+  let currentNotes = parseLog(lead.notes_log);
+  function renderCompanyNotes(){
+    const ownNotes = currentNotes.map(n=>({date:n.date, auteur:n.auteur, texte:n.texte}));
+    const contactNotes = [];
+    linked.forEach(c=>{
+      parseLog(c.notes_log).forEach(n=> contactNotes.push({date:n.date, auteur:n.auteur, texte:n.texte, source:'via le contact '+(c.nom||'(sans nom)')}));
+    });
+    renderNotesFeed(notesBox, {
+      notes: ownNotes.concat(contactNotes),
+      legacyNote: lead.detail,
+      onAddNote: async (texte, auteur)=>{
+        const next = currentNotes.concat([{date:new Date().toISOString(), auteur, texte}]);
+        await updateDoc('Entreprises', id, {notes_log: JSON.stringify(next)});
+        currentNotes = next; renderCompanyNotes(); toast('Note ajoutée');
+      }
+    });
+  }
+  renderCompanyNotes();
 
   const footer = el('div','drawer-footer');
   const del = el('button','btn btn-danger','Supprimer');
@@ -1106,18 +1286,22 @@ function openContactModal(contact, presetCompanyId){
   addDrawerExpandToggle(head, drawer);
   drawer.appendChild(head);
 
-  const body = el('div','drawer-body');
-  const colLeft = el('div','drawer-col-left');
-  const colRight = el('div','drawer-col-right');
-  body.appendChild(colLeft); body.appendChild(colRight);
-  drawer.appendChild(body);
+  const tabsApi = buildDrawerTabs(drawer, [
+    {id:'infos', label:'Infos'}, {id:'commandes', label:'Commandes'}, {id:'notes', label:'Notes'}
+  ]);
+  const panelInfos = el('div');
+  const panelCommandes = el('div');
+  const panelNotes = el('div');
+  tabsApi.registerPanel('infos', panelInfos);
+  tabsApi.registerPanel('commandes', panelCommandes);
+  tabsApi.registerPanel('notes', panelNotes);
 
   const fields = {};
   function field(key, labelText, type, val){
     const f = el('div','field'); f.appendChild(el('label',null,labelText));
     const input = type==='textarea' ? document.createElement('textarea') : document.createElement('input');
     if(type!=='textarea') input.type = type || 'text';
-    input.value = val || ''; f.appendChild(input); colLeft.appendChild(f); fields[key]=input; return input;
+    input.value = val || ''; f.appendChild(input); panelInfos.appendChild(f); fields[key]=input; return input;
   }
   field('nom','Nom', 'text', contact && contact.nom);
   const compSel = document.createElement('select');
@@ -1127,34 +1311,38 @@ function openContactModal(contact, presetCompanyId){
     if((contact && contact.entreprise_id===c.id) || (!contact && presetCompanyId===c.id)) o.selected=true;
     compSel.appendChild(o);
   });
-  const fComp = el('div','field'); fComp.appendChild(el('label',null,'Entreprise liée')); fComp.appendChild(compSel); colLeft.appendChild(fComp);
+  const fComp = el('div','field'); fComp.appendChild(el('label',null,'Entreprise liée')); fComp.appendChild(compSel); panelInfos.appendChild(fComp);
   field('role','Rôle / fonction', 'text', contact && contact.role);
   field('email','Email', 'email', contact && contact.email);
   field('telephone','Téléphone', 'tel', contact && contact.telephone);
 
+  const company = contact ? state.companies.find(c=>c.id===contact.entreprise_id) : null;
+  panelCommandes.appendChild(el('div','section-title drawer-panel-label','Commandes'));
+  const commandesBox = el('div'); panelCommandes.appendChild(commandesBox);
+  renderCommandesList(commandesBox, {
+    commandes: company ? parseLog(company.commandes_log) : [],
+    legacyCommande: company ? company.commandes : ''
+  });
+  if(!company) commandesBox.appendChild(el('div','muted','Aucune entreprise liée.'));
+
+  panelNotes.appendChild(el('div','section-title drawer-panel-label','Notes'));
+  const notesBox = el('div'); panelNotes.appendChild(notesBox);
   if(contact){
-    const company = state.companies.find(c=>c.id===contact.entreprise_id);
-    colRight.appendChild(el('div','section-title','Historique & notes'));
-    const feedBox = el('div'); colRight.appendChild(feedBox);
     let currentNotes = parseLog(contact.notes_log);
-    const companyCommandes = company ? parseLog(company.commandes_log) : [];
-    function renderContactFeed(){
-      renderFeed(feedBox, {
+    function renderContactNotes(){
+      renderNotesFeed(notesBox, {
         notes: currentNotes,
-        commandes: companyCommandes,
-        legacyCommande: company ? company.commandes : '',
         legacyNote: contact.notes,
         onAddNote: async (texte, auteur)=>{
           const next = currentNotes.concat([{date:new Date().toISOString(), auteur, texte}]);
           await updateDoc('Contacts', contact.id, {notes_log: JSON.stringify(next)});
-          currentNotes = next; renderContactFeed(); toast('Note ajoutée');
+          currentNotes = next; renderContactNotes(); toast('Note ajoutée');
         }
       });
     }
-    renderContactFeed();
+    renderContactNotes();
   } else {
-    colRight.appendChild(el('div','section-title','Historique & notes'));
-    colRight.appendChild(el('div','muted','Vous pourrez ajouter des notes une fois le contact créé.'));
+    notesBox.appendChild(el('div','muted','Vous pourrez ajouter des notes une fois le contact créé.'));
   }
 
   const actions = el('div','drawer-footer');
