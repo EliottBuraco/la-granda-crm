@@ -54,9 +54,10 @@ button{cursor:pointer;}
 .tab{padding:8px 14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;color:var(--text);border:1.5px solid var(--border);border-radius:var(--radius);white-space:nowrap;background:var(--surface);}
 .tab.active{background:var(--text);color:var(--bg);}
 .tab:hover:not(.active){background:var(--surface-2);}
-main{flex:1;padding:22px;max-width:1280px;width:100%;margin:0 auto;}
-.view{display:none;}
+main{flex:1;padding:22px;width:100%;}
+.view{display:none;max-width:1280px;width:100%;margin:0 auto;}
 .view.active{display:block;}
+#view-pipeline{max-width:none;}
 
 .card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius);border:1.5px solid var(--border);background:var(--surface);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;}
@@ -110,7 +111,7 @@ a{color:var(--primary);}
 .goal-meta{font-size:11.5px;color:var(--text-muted);display:flex;justify-content:space-between;}
 
 .kanban{display:flex;gap:16px;overflow-x:auto;padding-bottom:10px;}
-.kanban-col{flex:0 0 272px;display:flex;flex-direction:column;}
+.kanban-col{flex:1 1 240px;min-width:240px;display:flex;flex-direction:column;}
 .kanban-col-head{padding:11px 14px;border:1.5px solid var(--border);background:var(--surface);display:flex;justify-content:space-between;align-items:center;gap:8px;}
 .kanban-col-head .t{font-weight:800;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;display:flex;align-items:center;gap:8px;}
 .kanban-col-head .n{font-size:11px;color:var(--text-muted);font-weight:700;}
