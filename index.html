@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Granda CRM</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Permanent+Marker&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7F6F3; --surface:#FFFFFF; --surface-2:#F1EFEA; --surface-3:#E8E5DD;
+  --text:#1A1816; --text-muted:#716C63; --border:#DEDAD1;
+  --primary:#E8392E; --primary-dark:#C22A20; --primary-soft:#FBD9D4;
+  --accent-purple:#8B6FB8; --accent-green:#3E8E72; --accent-orange:#D9722E; --accent-slab:#2B2824; --accent-slab-fg:#FFFFFF;
+  --phase-perdu-bg:#E7E3DA; --phase-perdu-fg:#716C63;
+  --radius:8px; --shadow:0 1px 2px rgba(20,16,12,.06), 0 4px 14px -8px rgba(20,16,12,.14);
+  --font-display:'Anton',Impact,sans-serif; --font-logo:'Permanent Marker',cursive; --font-body:'Inter',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171512; --surface:#1E1C19; --surface-2:#242220; --surface-3:#2C2925;
+    --text:#EFEAE2; --text-muted:#A79E90; --border:#34312B;
+    --primary:#FF7A5C; --primary-dark:#E8392E; --primary-soft:#3D241D;
+    --accent-purple:#A98FD1; --accent-green:#5FBB98; --accent-orange:#E8924F; --accent-slab:#EFEAE2; --accent-slab-fg:#171512;
+    --phase-perdu-bg:#2A2824; --phase-perdu-fg:#8F8778;
+    --shadow:0 1px 2px rgba(0,0,0,.35), 0 6px 18px -8px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171512; --surface:#1E1C19; --surface-2:#242220; --surface-3:#2C2925;
+  --text:#EFEAE2; --text-muted:#A79E90; --border:#34312B;
+  --primary:#FF7A5C; --primary-dark:#E8392E; --primary-soft:#3D241D;
+  --accent-purple:#A98FD1; --accent-green:#5FBB98; --accent-orange:#E8924F; --accent-slab:#EFEAE2; --accent-slab-fg:#171512;
+  --phase-perdu-bg:#2A2824; --phase-perdu-fg:#8F8778;
+  --shadow:0 1px 2px rgba(0,0,0,.35), 0 6px 18px -8px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.45;}
+h1,h2,h3{font-family:var(--font-display);font-weight:400;text-transform:uppercase;letter-spacing:.01em;text-wrap:balance;}
+button,input,select,textarea{font-family:inherit;color:inherit;}
+button{cursor:pointer;}
+.hidden{display:none!important;}
+::-webkit-scrollbar{height:9px;width:9px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:9px;}
+
+#app{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{display:flex;align-items:center;gap:18px;padding:14px 22px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:30;}
+.brand{display:flex;align-items:baseline;gap:8px;}
+.brand h1{font-family:var(--font-logo);font-size:24px;text-transform:none;letter-spacing:0;line-height:1;margin:0;}
+.brand .star{color:var(--primary);font-size:14px;}
+.brand-text span{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;display:block;margin-top:2px;}
+.topbar .spacer{flex:1;}
+.syncbox{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-muted);}
+.syncdot{width:7px;height:7px;border-radius:50%;background:var(--accent-green);}
+.syncdot.syncing{background:var(--accent-orange);}
+.syncdot.err{background:var(--primary);}
+.tabs{display:flex;gap:2px;padding:0 22px;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;}
+.tab{padding:12px 15px;font-size:13px;font-weight:700;color:var(--text-muted);border-bottom:2.5px solid transparent;white-space:nowrap;background:none;border-radius:0;margin-bottom:-1px;}
+.tab.active{color:var(--text);border-color:var(--primary);}
+.tab:hover:not(.active){color:var(--text);}
+main{flex:1;padding:22px;max-width:1280px;width:100%;margin:0 auto;}
+.view{display:none;}
+.view.active{display:block;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);font-size:13px;font-weight:700;transition:background .12s ease,border-color .12s ease;}
+.btn:hover{border-color:var(--text-muted);}
+.btn-primary{background:var(--text);border-color:var(--text);color:var(--bg);}
+.btn-primary:hover{background:var(--primary);border-color:var(--primary-dark);color:#fff;}
+.btn-ghost{background:transparent;border-color:transparent;}
+.btn-danger{color:var(--primary);}
+.btn-sm{padding:6px 10px;font-size:12px;}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;border:1px solid var(--border);background:var(--surface-2);}
+input[type=text],input[type=email],input[type=number],input[type=date],input[type=url],input[type=search],input[type=tel],select,textarea{
+  width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2);color:var(--text);font-size:13.5px;
+}
+textarea{resize:vertical;min-height:60px;}
+label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px;}
+.field{margin-bottom:13px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.muted{color:var(--text-muted);}
+a{color:var(--primary);}
+.checkbox-row{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;}
+.checkbox-row input{width:auto;}
+
+.peppers{display:inline-flex;gap:2px;vertical-align:middle;}
+.peppers svg{width:12px;height:12px;}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px;}
+.toolbar select, .toolbar input[type=search]{width:auto;min-width:120px;}
+.toolbar .spacer{flex:1;}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px;}
+.kpi{padding:16px 18px;}
+.kpi.hero{background:var(--primary);border-color:var(--primary-dark);color:#fff;box-shadow:none;}
+.kpi .num{font-family:var(--font-display);font-size:28px;line-height:1;font-variant-numeric:tabular-nums;}
+.kpi .lbl{font-size:11px;color:var(--text-muted);margin-top:5px;text-transform:uppercase;letter-spacing:.03em;font-weight:700;}
+.kpi.hero .lbl{color:rgba(255,255,255,.85);}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media (max-width:900px){.dash-grid{grid-template-columns:1fr;} .field-row{grid-template-columns:1fr;}}
+.panel{padding:18px;margin-bottom:16px;}
+.panel h3{font-size:15px;margin:0 0 14px;}
+.action-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer;}
+.action-item:last-child{border-bottom:none;}
+.action-item:hover{color:var(--primary);}
+.flag{width:8px;height:8px;flex:none;border-radius:50%;}
+
+.goal-card{padding:16px 18px;margin-bottom:12px;}
+.goal-card .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:8px;}
+.goal-card .title{font-weight:700;font-size:14.5px;}
+.goal-card .nums{font-size:13px;color:var(--text-muted);font-variant-numeric:tabular-nums;}
+.goal-track{height:10px;background:var(--surface-3);border-radius:999px;overflow:hidden;margin:8px 0 6px;}
+.goal-fill{height:100%;background:var(--accent-green);}
+.goal-meta{font-size:11.5px;color:var(--text-muted);display:flex;justify-content:space-between;}
+
+.kanban{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;}
+.kanban-col{flex:0 0 240px;display:flex;flex-direction:column;}
+.kanban-col-head{padding:10px 12px;border-radius:var(--radius) var(--radius) 0 0;display:flex;justify-content:space-between;align-items:baseline;color:#fff;}
+.kanban-col-head .t{font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;}
+.kanban-col-head .n{font-size:10.5px;opacity:.9;font-weight:700;}
+.kanban-col-body{flex:1;background:var(--surface-2);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);padding:8px;min-height:120px;display:flex;flex-direction:column;gap:8px;}
+.kcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 11px;cursor:pointer;}
+.kcard:hover{border-color:var(--text-muted);}
+.kcard .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:5px;}
+.kcard .nom{font-weight:700;font-size:13.5px;}
+.kcard .meta{font-size:11px;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:5px;}
+.kcard select{font-size:11px;padding:4px 6px;margin-top:8px;}
+.avatar-chip{width:18px;height:18px;border-radius:50%;background:var(--surface-3);color:var(--text);border:1px solid var(--border);font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;}
+
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);padding:9px 10px;border-bottom:1px solid var(--border);white-space:nowrap;font-weight:700;}
+td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr.leadrow{cursor:pointer;}
+tr.leadrow:hover{background:var(--surface-2);}
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);}
+.table-wrap table{min-width:760px;}
+.stage-chip{display:inline-block;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;color:#fff;}
+
+.overlay{position:fixed;inset:0;background:rgba(10,10,10,.45);z-index:90;display:flex;justify-content:flex-end;}
+.overlay.center{justify-content:center;align-items:center;}
+.drawer{width:min(440px,92vw);background:var(--surface);height:100%;overflow-y:auto;padding:22px;border-left:1px solid var(--border);}
+.modal{width:min(400px,92vw);background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:22px;box-shadow:var(--shadow);}
+.drawer-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:10px;}
+.drawer-head h2{font-size:19px;margin:0;text-transform:none;font-family:var(--font-body);font-weight:800;}
+.close-x{background:none;border:none;font-size:20px;color:var(--text-muted);line-height:1;padding:4px;}
+.section-title{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--primary);margin:20px 0 10px;border-top:1px solid var(--border);padding-top:16px;}
+.section-title:first-of-type{border-top:none;margin-top:0;padding-top:0;}
+.drawer-footer{display:flex;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+.check-row{display:flex;gap:14px;flex-wrap:wrap;}
+.check-row label{display:flex;align-items:center;gap:5px;font-size:12.5px;text-transform:none;font-weight:600;color:var(--text);}
+.check-row input{width:auto;}
+
+.linked-contact{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.linked-contact:last-child{border-bottom:none;}
+
+.empty{padding:36px 20px;text-align:center;color:var(--text-muted);}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:9px 18px;border-radius:var(--radius);font-size:13px;z-index:200;box-shadow:var(--shadow);font-weight:600;}
+
+.setup-screen{max-width:520px;margin:60px auto;padding:28px;}
+.setup-screen h2{font-size:20px;margin:0 0 10px;text-transform:none;font-family:var(--font-body);font-weight:800;}
+.setup-screen p{font-size:13.5px;color:var(--text-muted);margin-bottom:14px;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="topbar">
+    <div class="brand">
+      <h1>La Granda</h1>
+      <span class="star">★</span>
+      <div class="brand-text"><span>CRM</span></div>
+    </div>
+    <div class="spacer"></div>
+    <div class="syncbox" id="syncBox"><span class="syncdot" id="syncDot"></span><span id="syncLabel">—</span></div>
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-view="dashboard">Dashboard</button>
+    <button class="tab" data-view="objectifs">Objectifs</button>
+    <button class="tab" data-view="pipeline">Pipeline</button>
+    <button class="tab" data-view="entreprises">Entreprises</button>
+    <button class="tab" data-view="contacts">Contacts</button>
+    <button class="tab" data-view="b2c">Clients B2C</button>
+  </div>
+
+  <main>
+    <div id="setupScreen" class="hidden"></div>
+
+    <section class="view active" id="view-dashboard">
+      <div class="kpi-grid" id="kpiGrid"></div>
+      <div class="dash-grid">
+        <div class="card panel">
+          <h3>Objectifs du moment</h3>
+          <div id="dashGoals"></div>
+        </div>
+        <div class="card panel">
+          <h3>Actions à relancer</h3>
+          <div id="actionsList"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-objectifs">
+      <div class="toolbar">
+        <div class="spacer"></div>
+        <button class="btn btn-primary" id="addGoalBtn">+ Nouvel objectif</button>
+      </div>
+      <div id="goalsList"></div>
+    </section>
+
+    <section class="view" id="view-pipeline">
+      <div class="toolbar" id="pipelineToolbar"></div>
+      <div class="kanban" id="kanban"></div>
+    </section>
+
+    <section class="view" id="view-entreprises">
+      <div class="toolbar" id="entreprisesToolbar"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Entreprise</th><th>Persona</th><th>Étape</th><th>Priorité</th><th>Owner</th><th>Prochaine action</th><th>Valeur</th></tr></thead>
+          <tbody id="entreprisesTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="view" id="view-contacts">
+      <div class="toolbar" id="contactsToolbar">
+        <input type="search" id="contactsSearch" placeholder="Rechercher un contact…">
+        <div class="spacer"></div>
+        <button class="btn btn-primary" id="addContactBtn">+ Nouveau contact</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nom</th><th>Entreprise</th><th>Rôle</th><th>Email</th><th>Téléphone</th></tr></thead>
+          <tbody id="contactsTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="view" id="view-b2c">
+      <div class="toolbar" id="b2cToolbar">
+        <input type="search" id="b2cSearch" placeholder="Rechercher un client…">
+        <div class="spacer"></div>
+        <button class="btn btn-primary" id="addB2cBtn">+ Nouveau client</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nom</th><th>Canal</th><th>Ville</th><th>Dernière commande</th><th>Nb commandes</th><th>Valeur totale</th></tr></thead>
+          <tbody id="b2cTbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script src="data.js"></script>
+<script>
+(function(){
+"use strict";
+const D = window.STATIC_DATA;
+const STAGE_ORDER = D.stageOrder;
+const KO = "KO";
+
+// Apps Script Web App URL — rempli une fois le script déployé. Si vide,
+// chaque appareil peut le renseigner une fois via l'écran de configuration
+// (stocké uniquement dans ce navigateur).
+const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbyhffsu0e5Q432c_XwQJBV5iZfs8aVbxh4vF9zhHPTF-kAv1QB0ZaBA1X8xv7YsJFsjZw/exec";
+
+const PHASE_COLOR = {
+  prospection: 'var(--accent-purple)', qualification: 'var(--accent-green)',
+  negociation: 'var(--accent-orange)', actif: 'var(--accent-slab)', perdu: 'var(--phase-perdu-bg)',
+};
+const PHASE_FG = { prospection:'#fff', qualification:'#fff', negociation:'#fff', actif:'var(--accent-slab-fg)', perdu:'var(--phase-perdu-fg)' };
+
+function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+function fmtMoney(n){ n = Number(n)||0; return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'; }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function parseISODate(s){
+  if(!s || !/^\d{4}-\d{2}-\d{2}$/.test(String(s).trim())) return null;
+  const d = new Date(s+"T00:00:00");
+  return isNaN(d.getTime()) ? null : d;
+}
+function fmtDateDisplay(s){
+  const d = parseISODate(s);
+  if(!d) return s || "—";
+  return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+}
+function stagePhase(stage){
+  const p = D.phases.find(p=>p.stages.includes(stage));
+  return p ? p.key : D.phases[0].key;
+}
+function ownersList(s){ return String(s||'').split(',').map(x=>x.trim()).filter(Boolean); }
+function toast(msg){
+  const t = el('div','toast',msg);
+  document.getElementById('toastRoot').appendChild(t);
+  setTimeout(()=>t.remove(), 2200);
+}
+function initials(name){
+  return (name||'?').split(/[\s,]+/).filter(Boolean).slice(0,1).map(w=>w[0]).join('').toUpperCase();
+}
+const PEPPER_PATH = "M11.2 2.3c-.4.9-1.1 1.4-1.9 2-1.8 1.4-3.4 3.4-3.1 6.5.3 3 2.4 5.5 5 6.4 2.6.9 5.3-.1 6.6-2.4 1.1-2 1-4.2-.2-6.6-.9-1.8-2.4-2.8-3.6-3.9-.7-.6-1.3-1.2-1.4-2h-1.4z";
+function pepperSvg(active){
+  return '<svg viewBox="0 0 20 20"><path d="'+PEPPER_PATH+'" fill="'+(active?'var(--primary)':'none')+'" stroke="'+(active?'var(--primary-dark)':'var(--border)')+'" stroke-width="1.2"/></svg>';
+}
+function pepperRating(priorite){
+  const n = priorite==='High' ? 3 : priorite==='Medium' ? 2 : priorite==='Low' ? 1 : 0;
+  const span = document.createElement('span'); span.className='peppers'; span.title = priorite||'Non défini';
+  let html='';
+  for(let i=0;i<3;i++) html += pepperSvg(i<n);
+  span.innerHTML = html;
+  return span;
+}
+
+/* ---------------- API layer (Google Apps Script) ---------------- */
+function getApiUrl(){
+  try{ return DEFAULT_API_URL || localStorage.getItem('granda_api_url') || ''; }
+  catch(e){ return DEFAULT_API_URL; }
+}
+function setSync(status, label){
+  const dot = document.getElementById('syncDot');
+  dot.className = 'syncdot' + (status==='syncing' ? ' syncing' : status==='error' ? ' err' : '');
+  document.getElementById('syncLabel').textContent = label;
+}
+async function apiCall(method, params, body){
+  const url = getApiUrl();
+  if(!url) throw new Error('no_api_url');
+  const q = Object.keys(params||{}).map(k=>encodeURIComponent(k)+'='+encodeURIComponent(params[k])).join('&');
+  const full = url + (q ? ('?'+q) : '');
+  const opts = { method: method };
+  if(body){ opts.headers = {'Content-Type':'text/plain;charset=utf-8'}; opts.body = JSON.stringify(body); }
+  const res = await fetch(full, opts);
+  const json = await res.json();
+  if(!json.ok) throw new Error(json.error || 'api_error');
+  return json.data;
+}
+function apiList(collection){ return apiCall('GET', {action:'list', collection: collection}); }
+function apiCreate(collection, data){ return apiCall('POST', {}, {action:'create', collection: collection, data: data}); }
+function apiUpdate(collection, id, data){ return apiCall('POST', {}, {action:'update', collection: collection, id: id, data: data}); }
+function apiDelete(collection, id){ return apiCall('POST', {}, {action:'delete', collection: collection, id: id}); }
+
+/* ---------------- state ---------------- */
+const state = {
+  companies: [], contacts: [], customers: [], goals: [],
+  activeView: 'dashboard',
+  companyFilters: { search:'', persona:'', owner:'', priorite:'', objectif:'' },
+  contactsSearch: '', b2cSearch: '',
+  ready: false,
+};
+
+/* ---------------- boot / setup ---------------- */
+function showSetupScreen(){
+  document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
+  document.getElementById('tabs').classList.add('hidden');
+  const box = document.getElementById('setupScreen');
+  box.classList.remove('hidden');
+  box.innerHTML = '';
+  const card = el('div','card setup-screen');
+  card.appendChild(el('h2',null,'Connexion au classeur Google Sheets'));
+  card.appendChild(el('p',null,'Colle ici l’URL de l’application Web Apps Script (elle se termine par /exec). Une fois enregistrée dans ce navigateur, cet écran ne réapparaît plus ici.'));
+  const input = document.createElement('input'); input.type='url'; input.placeholder='https://script.google.com/macros/s/.../exec';
+  const f = el('div','field'); f.appendChild(el('label',null,'URL de l’application Web')); f.appendChild(input);
+  card.appendChild(f);
+  const btn = el('button','btn btn-primary','Enregistrer et continuer');
+  btn.addEventListener('click', ()=>{
+    const v = input.value.trim();
+    if(!v){ toast('Colle une URL valide'); return; }
+    try{ localStorage.setItem('granda_api_url', v); }catch(e){}
+    location.reload();
+  });
+  card.appendChild(btn);
+  box.appendChild(card);
+}
+
+async function boot(){
+  if(!getApiUrl()){ showSetupScreen(); return; }
+  document.getElementById('tabs').classList.remove('hidden');
+  await refreshAll();
+  startPolling();
+}
+async function refreshAll(){
+  setSync('syncing', 'Synchronisation…');
+  try{
+    const [companies, contacts, customers, goals] = await Promise.all([
+      apiList('Entreprises'), apiList('Contacts'), apiList('Clients_B2C'), apiList('Objectifs'),
+    ]);
+    state.companies = companies; state.contacts = contacts; state.customers = customers; state.goals = goals;
+    state.ready = true;
+    setSync('ok', 'À jour');
+    renderCurrentView();
+  }catch(e){
+    setSync('error', 'Hors ligne');
+  }
+}
+let pollTimer = null;
+function startPolling(){
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(refreshAll, 20000);
+}
+
+/* ---------------- CRUD helpers ---------------- */
+async function createDoc(collection, data){
+  setSync('syncing','Enregistrement…');
+  try{ const r = await apiCreate(collection, data); await refreshAll(); return r.id; }
+  catch(e){ setSync('error','Erreur'); toast('Impossible d’enregistrer'); throw e; }
+}
+async function updateDoc(collection, id, patch){
+  setSync('syncing','Enregistrement…');
+  try{ await apiUpdate(collection, id, patch); await refreshAll(); }
+  catch(e){ setSync('error','Erreur'); toast('Impossible d’enregistrer'); throw e; }
+}
+async function deleteDoc(collection, id){
+  setSync('syncing','Suppression…');
+  try{ await apiDelete(collection, id); await refreshAll(); }
+  catch(e){ setSync('error','Erreur'); toast('Impossible de supprimer'); throw e; }
+}
+
+/* ---------------- router ---------------- */
+function renderCurrentView(){
+  if(!state.ready) return;
+  if(state.activeView==='dashboard') renderDashboard();
+  else if(state.activeView==='objectifs') renderGoals();
+  else if(state.activeView==='pipeline') renderPipeline();
+  else if(state.activeView==='entreprises') renderEntreprises();
+  else if(state.activeView==='contacts') renderContacts();
+  else if(state.activeView==='b2c') renderB2C();
+}
+document.getElementById('tabs').addEventListener('click', e=>{
+  const btn = e.target.closest('.tab'); if(!btn) return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  state.activeView = btn.dataset.view;
+  document.getElementById('view-'+state.activeView).classList.add('active');
+  renderCurrentView();
+});
+
+/* ---------------- filter toolbar ---------------- */
+function renderCompanyFilterToolbar(container, opts){
+  container.innerHTML='';
+  const search = el('input'); search.type='search'; search.placeholder='Rechercher une entreprise…'; search.value=state.companyFilters.search;
+  search.addEventListener('input', e=>{ state.companyFilters.search=e.target.value; renderCurrentView(); });
+  container.appendChild(search);
+  function mkSelect(key, values, label){
+    const s = document.createElement('select');
+    const opt0 = el('option', null, label); opt0.value=''; s.appendChild(opt0);
+    values.forEach(v=>{ const o=el('option',null,v); o.value=v; if(state.companyFilters[key]===v) o.selected=true; s.appendChild(o); });
+    s.addEventListener('change', e=>{ state.companyFilters[key]=e.target.value; renderCurrentView(); });
+    return s;
+  }
+  container.appendChild(mkSelect('persona', D.personas, 'Toutes personas'));
+  container.appendChild(mkSelect('owner', D.owners, 'Tous owners'));
+  container.appendChild(mkSelect('priorite', D.priorites, 'Toutes priorités'));
+  container.appendChild(mkSelect('objectif', D.objectifs, 'Tous objectifs'));
+  container.appendChild(el('div','spacer'));
+  if(opts && opts.addButton){
+    const btn = el('button','btn btn-primary','+ Nouvelle entreprise');
+    btn.addEventListener('click', openAddCompanyModal);
+    container.appendChild(btn);
+  }
+}
+function getFilteredCompanies(){
+  const f = state.companyFilters;
+  return state.companies.filter(l=>{
+    if(f.persona && l.persona!==f.persona) return false;
+    if(f.priorite && l.priorite!==f.priorite) return false;
+    if(f.objectif && l.objectif!==f.objectif) return false;
+    if(f.owner && !ownersList(l.owners).includes(f.owner)) return false;
+    if(f.search){
+      const s = f.search.toLowerCase();
+      const hay = [l.nom,l.instagram,l.localisation,l.ville_pays,l.detail].join(' ').toLowerCase();
+      if(!hay.includes(s)) return false;
+    }
+    return true;
+  });
+}
+
+/* ---------------- DASHBOARD ---------------- */
+function renderDashboard(){
+  const companies = state.companies;
+  const active = companies.filter(l=>l.stage!==KO);
+  const kpi = document.getElementById('kpiGrid'); kpi.innerHTML='';
+  function addKpi(num, lbl, hero){
+    const c = el('div','card kpi'+(hero?' hero':''));
+    c.appendChild(el('div','num',num)); c.appendChild(el('div','lbl',lbl));
+    kpi.appendChild(c);
+  }
+  const totalValeur = active.reduce((s,l)=>s+(Number(l.valeur)||0),0);
+  const today = todayISO();
+  const overdue = active.filter(l=>{ const d=parseISODate(l.date_prochaine_action); return d && l.date_prochaine_action < today; }).length;
+  addKpi(String(active.length), 'Entreprises actives');
+  addKpi(String(state.customers.length), 'Clients B2C');
+  addKpi(String(overdue), 'Actions en retard');
+  addKpi(fmtMoney(totalValeur), 'Valeur pipeline', true);
+
+  const dashGoals = document.getElementById('dashGoals'); dashGoals.innerHTML='';
+  if(state.goals.length===0){ dashGoals.appendChild(el('div','muted','Aucun objectif défini pour le moment.')); }
+  state.goals.slice(0,4).forEach(g=> dashGoals.appendChild(goalCard(g, true)) );
+
+  const list = document.getElementById('actionsList'); list.innerHTML='';
+  const withDates = active.map(l=>({l, d:l.date_prochaine_action})).filter(x=>parseISODate(x.d)).sort((a,b)=> a.d < b.d ? -1 : 1).slice(0,8);
+  if(withDates.length===0){ list.appendChild(el('div','muted','Aucune date d’action planifiée.')); }
+  withDates.forEach(x=>{
+    const row = el('div','action-item');
+    const late = x.d < today;
+    const dot = el('span','flag'); dot.style.background = late ? 'var(--primary)' : 'var(--accent-green)';
+    row.appendChild(dot);
+    const name = el('span',null,x.l.nom || '(sans nom)'); name.style.fontWeight='700'; name.style.flex='1';
+    row.appendChild(name);
+    row.appendChild(el('span','muted', fmtDateDisplay(x.d)));
+    row.addEventListener('click', ()=>openCompanyDetail(x.l.id));
+    list.appendChild(row);
+  });
+}
+
+/* ---------------- OBJECTIFS ---------------- */
+function goalCard(g, compact){
+  const card = el('div', compact ? '' : 'card goal-card');
+  if(compact) card.style.marginBottom='14px';
+  const head = el('div','head');
+  head.appendChild(el('span','title', g.titre || '(sans titre)'));
+  head.appendChild(el('span','nums', (g.valeur_actuelle||0)+' / '+(g.cible||0)+' '+(g.unite||'')));
+  card.appendChild(head);
+  const track = el('div','goal-track');
+  const pct = g.cible ? Math.min(100, Math.round((Number(g.valeur_actuelle)||0)/Number(g.cible)*100)) : 0;
+  const fill = el('div','goal-fill'); fill.style.width = pct+'%';
+  if(pct>=100) fill.style.background='var(--accent-green)';
+  else if(pct<34) fill.style.background='var(--primary)';
+  else fill.style.background='var(--accent-orange)';
+  track.appendChild(fill); card.appendChild(track);
+  const meta = el('div','goal-meta');
+  meta.appendChild(el('span',null, g.echeance ? ('Échéance : '+fmtDateDisplay(g.echeance)) : ''));
+  meta.appendChild(el('span',null, pct+'%'));
+  card.appendChild(meta);
+  if(!compact){
+    card.style.cursor='pointer';
+    card.addEventListener('click', ()=>openGoalModal(g));
+  }
+  return card;
+}
+function renderGoals(){
+  const list = document.getElementById('goalsList'); list.innerHTML='';
+  if(state.goals.length===0){ list.appendChild(el('div','empty','Aucun objectif pour le moment. Cliquez sur "+ Nouvel objectif".')); return; }
+  state.goals.forEach(g=> list.appendChild(goalCard(g, false)) );
+}
+document.getElementById('addGoalBtn').addEventListener('click', ()=>openGoalModal(null));
+function openGoalModal(goal){
+  const root = document.getElementById('modalRoot'); root.innerHTML='';
+  const overlay = el('div','overlay center');
+  const modal = el('div','modal');
+  modal.appendChild(el('h2',null, goal ? 'Modifier l’objectif' : 'Nouvel objectif'));
+  const fields = {};
+  function field(key, labelText, type, val){
+    const f = el('div','field'); f.appendChild(el('label',null,labelText));
+    const input = document.createElement(type==='textarea'?'textarea':'input');
+    if(type && type!=='textarea') input.type = type;
+    input.value = val || '';
+    f.appendChild(input); modal.appendChild(f); fields[key]=input; return input;
+  }
+  field('titre','Titre', 'text', goal && goal.titre);
+  const row = el('div','field-row');
+  const f1 = el('div'); f1.appendChild(el('label',null,'Cible')); const i1=document.createElement('input'); i1.type='number'; i1.value = goal ? goal.cible : ''; f1.appendChild(i1); fields.cible=i1;
+  const f2 = el('div'); f2.appendChild(el('label',null,'Unité (€, comptes…)')); const i2=document.createElement('input'); i2.type='text'; i2.value = goal ? goal.unite : ''; f2.appendChild(i2); fields.unite=i2;
+  row.appendChild(f1); row.appendChild(f2); modal.appendChild(row);
+  field('valeur_actuelle','Valeur actuelle', 'number', goal && goal.valeur_actuelle);
+  field('echeance','Échéance', 'date', goal && goal.echeance);
+  field('commentaire','Commentaire', 'textarea', goal && goal.commentaire);
+  const actions = el('div','drawer-footer');
+  if(goal){
+    const del = el('button','btn btn-danger','Supprimer');
+    del.addEventListener('click', async ()=>{ await deleteDoc('Objectifs', goal.id); closeModal(); toast('Objectif supprimé'); });
+    actions.appendChild(del);
+  } else { actions.appendChild(el('div')); }
+  const save = el('button','btn btn-primary', goal ? 'Enregistrer' : 'Créer');
+  save.addEventListener('click', async ()=>{
+    const data = {
+      titre: fields.titre.value.trim(),
+      cible: Number(fields.cible.value)||0,
+      unite: fields.unite.value.trim(),
+      valeur_actuelle: Number(fields.valeur_actuelle.value)||0,
+      echeance: fields.echeance.value,
+      commentaire: fields.commentaire.value,
+    };
+    if(!data.titre){ toast('Le titre est requis'); return; }
+    if(goal) await updateDoc('Objectifs', goal.id, data); else await createDoc('Objectifs', data);
+    closeModal(); toast(goal ? 'Objectif mis à jour' : 'Objectif créé');
+  });
+  actions.appendChild(save);
+  modal.appendChild(actions);
+  overlay.appendChild(modal);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
+  root.appendChild(overlay);
+}
+
+/* ---------------- PIPELINE ---------------- */
+function renderPipeline(){
+  renderCompanyFilterToolbar(document.getElementById('pipelineToolbar'), {addButton:true});
+  const board = document.getElementById('kanban'); board.innerHTML='';
+  const companies = getFilteredCompanies();
+  D.phases.forEach(phase=>{
+    const col = el('div','kanban-col');
+    const head = el('div','kanban-col-head');
+    head.style.background = PHASE_COLOR[phase.key]; head.style.color = PHASE_FG[phase.key];
+    head.appendChild(el('span','t',phase.label));
+    const inPhase = companies.filter(l=>stagePhase(l.stage)===phase.key);
+    head.appendChild(el('span','n', inPhase.length+' · '+fmtMoney(inPhase.reduce((s,l)=>s+(Number(l.valeur)||0),0))));
+    col.appendChild(head);
+    const body = el('div','kanban-col-body');
+    if(inPhase.length===0) body.appendChild(el('div','muted','—'));
+    inPhase.forEach(l=>{
+      const card = el('div','kcard');
+      const top = el('div','top-row');
+      top.appendChild(el('span','nom', l.nom || '(sans nom)'));
+      top.appendChild(pepperRating(l.priorite));
+      card.appendChild(top);
+      const meta = el('div','meta');
+      meta.appendChild(el('span',null,l.persona||''));
+      ownersList(l.owners).forEach(o=> meta.appendChild(elAvatar(o)) );
+      if(l.date_prochaine_action){
+        const span = el('span',null, fmtDateDisplay(l.date_prochaine_action));
+        if(l.date_prochaine_action < todayISO()) span.style.color='var(--primary)';
+        meta.appendChild(span);
+      }
+      card.appendChild(meta);
+      const sel = document.createElement('select');
+      STAGE_ORDER.forEach(s=>{ const o=el('option',null,s); o.value=s; if(s===l.stage) o.selected=true; sel.appendChild(o); });
+      sel.addEventListener('click', e=>e.stopPropagation());
+      sel.addEventListener('change', e=>{ e.stopPropagation(); updateDoc('Entreprises', l.id, {stage:e.target.value}).then(()=>toast('Étape mise à jour')); });
+      card.appendChild(sel);
+      card.addEventListener('click', ()=>openCompanyDetail(l.id));
+      body.appendChild(card);
+    });
+    col.appendChild(body);
+    board.appendChild(col);
+  });
+}
+function elAvatar(owner){ const a = el('span','avatar-chip', initials(owner)); a.title = owner; return a; }
+
+/* ---------------- ENTREPRISES ---------------- */
+function renderEntreprises(){
+  renderCompanyFilterToolbar(document.getElementById('entreprisesToolbar'), {addButton:true});
+  const tbody = document.getElementById('entreprisesTbody'); tbody.innerHTML='';
+  const companies = getFilteredCompanies().slice().sort((a,b)=>(a.nom||'').localeCompare(b.nom||''));
+  if(companies.length===0){
+    const tr = document.createElement('tr'); const td = document.createElement('td');
+    td.colSpan=7; td.className='empty'; td.textContent='Aucune entreprise ne correspond aux filtres.';
+    tr.appendChild(td); tbody.appendChild(tr); return;
+  }
+  companies.forEach(l=>{
+    const tr = el('tr','leadrow');
+    tr.addEventListener('click', ()=>openCompanyDetail(l.id));
+    const tdNom = document.createElement('td');
+    tdNom.appendChild(el('div',null,l.nom||'(sans nom)'));
+    if(l.instagram) tdNom.appendChild(el('div','muted','@'+l.instagram.replace(/^@/,'')));
+    tr.appendChild(tdNom);
+    tr.appendChild(el('td',null,l.persona||''));
+    const tdStage = document.createElement('td');
+    const phase = stagePhase(l.stage);
+    const chip = el('span','stage-chip', l.stage==='KO' ? 'KO' : l.stage.split(' - ')[0]);
+    chip.style.background = PHASE_COLOR[phase]; chip.style.color = PHASE_FG[phase]; chip.title = l.stage;
+    tdStage.appendChild(chip); tr.appendChild(tdStage);
+    const tdPrio = document.createElement('td');
+    if(l.priorite) tdPrio.appendChild(pepperRating(l.priorite));
+    tr.appendChild(tdPrio);
+    tr.appendChild(el('td',null, ownersList(l.owners).join(', ')));
+    const tdDate = document.createElement('td');
+    if(l.date_prochaine_action){ tdDate.textContent = fmtDateDisplay(l.date_prochaine_action); if(l.date_prochaine_action<todayISO()) tdDate.style.color='var(--primary)'; }
+    tr.appendChild(tdDate);
+    tr.appendChild(el('td',null, l.valeur ? fmtMoney(l.valeur) : '—'));
+    tbody.appendChild(tr);
+  });
+}
+function openAddCompanyModal(){
+  const root = document.getElementById('modalRoot'); root.innerHTML='';
+  const overlay = el('div','overlay center');
+  const modal = el('div','modal');
+  modal.appendChild(el('h2',null,'Nouvelle entreprise'));
+  const nomInput = document.createElement('input'); nomInput.type='text'; nomInput.placeholder='Nom de l’entreprise';
+  const f1 = el('div','field'); f1.appendChild(el('label',null,'Nom *')); f1.appendChild(nomInput); modal.appendChild(f1);
+  const personaSel = document.createElement('select'); D.personas.forEach(p=>personaSel.appendChild(el('option',null,p)));
+  const f2 = el('div','field'); f2.appendChild(el('label',null,'Persona')); f2.appendChild(personaSel); modal.appendChild(f2);
+  const ownerWrap = el('div','check-row');
+  D.owners.forEach(o=>{ const lbl=document.createElement('label'); const cb=document.createElement('input'); cb.type='checkbox'; cb.value=o; lbl.appendChild(cb); lbl.appendChild(document.createTextNode(o)); ownerWrap.appendChild(lbl); });
+  const f3 = el('div','field'); f3.appendChild(el('label',null,'Owner(s)')); f3.appendChild(ownerWrap); modal.appendChild(f3);
+  const actions = el('div','drawer-footer');
+  actions.appendChild(el('button','btn','Annuler')).addEventListener('click', closeModal);
+  const save = el('button','btn btn-primary','Créer');
+  save.addEventListener('click', async ()=>{
+    if(!nomInput.value.trim()){ toast('Le nom est requis'); return; }
+    const owners = Array.from(ownerWrap.querySelectorAll('input:checked')).map(c=>c.value).join(', ');
+    const data = {
+      persona: personaSel.value, nom: nomInput.value.trim(), instagram:'', site_web:'', localisation:'', ville_pays:'', tel_compte:'',
+      stage: STAGE_ORDER[0], etape_suivante:'', priorite:'Medium', objectif:'Vente', owners,
+      dernier_contact:'', date_prochaine_action:'', details_actions:'', objections:'', commandes:'', valeur:0, detail:'',
+      nom_contact:'', role_contact:'', email_contact:'', tel_contact:'',
+    };
+    const id = await createDoc('Entreprises', data);
+    closeModal(); toast('Entreprise créée'); openCompanyDetail(id);
+  });
+  actions.appendChild(save);
+  modal.appendChild(actions);
+  overlay.appendChild(modal);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
+  root.appendChild(overlay);
+}
+function closeModal(){ document.getElementById('modalRoot').innerHTML=''; }
+
+function openCompanyDetail(id){
+  const lead = state.companies.find(l=>l.id===id);
+  if(!lead) return;
+  const root = document.getElementById('modalRoot'); root.innerHTML='';
+  const overlay = el('div','overlay');
+  const drawer = el('div','drawer');
+  const head = el('div','drawer-head');
+  head.appendChild(el('h2',null, lead.nom || '(sans nom)'));
+  const closeBtn = el('button','close-x','✕'); closeBtn.addEventListener('click', closeModal);
+  head.appendChild(closeBtn); drawer.appendChild(head);
+
+  const fields = {};
+  function section(title){ drawer.appendChild(el('div','section-title',title)); }
+  function field(key, labelText, type){
+    const f = el('div','field'); f.appendChild(el('label',null,labelText));
+    const input = type==='textarea' ? document.createElement('textarea') : document.createElement('input');
+    if(type && type!=='textarea') input.type = type;
+    input.value = lead[key] || '';
+    f.appendChild(input); drawer.appendChild(f); fields[key]=input; return input;
+  }
+  function select(key, labelText, options){
+    const f = el('div','field'); f.appendChild(el('label',null,labelText));
+    const s = document.createElement('select');
+    const blank = el('option',null,'—'); blank.value=''; s.appendChild(blank);
+    options.forEach(o=>{ const op=el('option',null,o); op.value=o; if(lead[key]===o) op.selected=true; s.appendChild(op); });
+    f.appendChild(s); drawer.appendChild(f); fields[key]=s; return s;
+  }
+
+  section('Entreprise');
+  field('nom','Nom');
+  select('persona','Persona', D.personas);
+  field('instagram','Instagram (@handle)');
+  field('site_web','Site web','url');
+  field('ville_pays','Ville / Pays');
+
+  section('Pipeline');
+  select('stage','Étape pipeline', STAGE_ORDER);
+  select('priorite','Priorité', D.priorites);
+  select('objectif','Objectif', D.objectifs);
+  const ownerWrap = el('div','check-row');
+  const currentOwners = ownersList(lead.owners);
+  D.owners.forEach(o=>{ const lbl=document.createElement('label'); const cb=document.createElement('input'); cb.type='checkbox'; cb.value=o; cb.checked=currentOwners.includes(o); lbl.appendChild(cb); lbl.appendChild(document.createTextNode(o)); ownerWrap.appendChild(lbl); });
+  const fOwner = el('div','field'); fOwner.appendChild(el('label',null,'Owner(s)')); fOwner.appendChild(ownerWrap); drawer.appendChild(fOwner);
+
+  section('Suivi');
+  const dateRow = el('div','field-row');
+  const d1 = document.createElement('div'); d1.appendChild(el('label',null,'Dernier contact')); const i1=document.createElement('input'); i1.type='date'; i1.value=parseISODate(lead.dernier_contact)?lead.dernier_contact:''; d1.appendChild(i1);
+  const d2 = document.createElement('div'); d2.appendChild(el('label',null,'Prochaine action (date)')); const i2=document.createElement('input'); i2.type='date'; i2.value=parseISODate(lead.date_prochaine_action)?lead.date_prochaine_action:''; d2.appendChild(i2);
+  dateRow.appendChild(d1); dateRow.appendChild(d2); drawer.appendChild(dateRow);
+  fields.dernier_contact=i1; fields.date_prochaine_action=i2;
+  field('details_actions','Détails des dernières actions','textarea');
+  field('objections','Objections / freins','textarea');
+  field('detail','Notes générales','textarea');
+
+  section('Commercial');
+  field('commandes','Commandes passées');
+  field('valeur','Valeur (€)','number');
+
+  section('Contacts liés');
+  const contactsBox = el('div');
+  const linked = state.contacts.filter(c=>c.entreprise_id===id);
+  if(linked.length===0) contactsBox.appendChild(el('div','muted','Aucun contact lié.'));
+  linked.forEach(c=>{
+    const row = el('div','linked-contact');
+    row.appendChild(el('span',null, [c.nom, c.role].filter(Boolean).join(' · ') || '(sans nom)'));
+    const openBtn = el('button','btn btn-sm','Ouvrir');
+    openBtn.addEventListener('click', ()=>openContactModal(c));
+    row.appendChild(openBtn);
+    contactsBox.appendChild(row);
+  });
+  drawer.appendChild(contactsBox);
+  const addContactBtn = el('button','btn btn-sm','+ Ajouter un contact'); addContactBtn.style.marginTop='8px';
+  addContactBtn.addEventListener('click', ()=>openContactModal(null, id));
+  drawer.appendChild(addContactBtn);
+
+  const footer = el('div','drawer-footer');
+  const del = el('button','btn btn-danger','Supprimer');
+  del.addEventListener('click', async ()=>{
+    if(confirm('Supprimer définitivement cette entreprise ?')){ await deleteDoc('Entreprises', id); closeModal(); toast('Entreprise supprimée'); }
+  });
+  const save = el('button','btn btn-primary','Enregistrer');
+  save.addEventListener('click', async ()=>{
+    const patch = {};
+    Object.keys(fields).forEach(k=>{ let v = fields[k].value; if(k==='valeur') v = Number(v)||0; patch[k]=v; });
+    patch.owners = Array.from(ownerWrap.querySelectorAll('input:checked')).map(c=>c.value).join(', ');
+    try{ await updateDoc('Entreprises', id, patch); toast('Entreprise mise à jour'); closeModal(); }
+    catch(e){ /* toast already shown */ }
+  });
+  footer.appendChild(del); footer.appendChild(save);
+  drawer.appendChild(footer);
+  overlay.appendChild(drawer);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
+  root.appendChild(overlay);
+}
+
+/* ---------------- CONTACTS ---------------- */
+function companyName(id){ const c = state.companies.find(x=>x.id===id); return c ? c.nom : ''; }
+function renderContacts(){
+  document.getElementById('contactsSearch').value = state.contactsSearch;
+  const tbody = document.getElementById('contactsTbody'); tbody.innerHTML='';
+  const s = state.contactsSearch.toLowerCase();
+  const list = state.contacts.filter(c=> !s || [c.nom,c.role,c.email,companyName(c.entreprise_id)].join(' ').toLowerCase().includes(s))
+    .sort((a,b)=>(a.nom||'').localeCompare(b.nom||''));
+  if(list.length===0){ const tr=document.createElement('tr'); const td=document.createElement('td'); td.colSpan=5; td.className='empty'; td.textContent='Aucun contact.'; tr.appendChild(td); tbody.appendChild(tr); return; }
+  list.forEach(c=>{
+    const tr = el('tr','leadrow'); tr.addEventListener('click', ()=>openContactModal(c));
+    tr.appendChild(el('td',null, c.nom || '(sans nom)'));
+    tr.appendChild(el('td',null, companyName(c.entreprise_id) || '—'));
+    tr.appendChild(el('td',null, c.role || ''));
+    tr.appendChild(el('td',null, c.email || ''));
+    tr.appendChild(el('td',null, c.telephone || ''));
+    tbody.appendChild(tr);
+  });
+}
+document.getElementById('contactsSearch').addEventListener('input', e=>{ state.contactsSearch=e.target.value; renderContacts(); });
+document.getElementById('addContactBtn').addEventListener('click', ()=>openContactModal(null));
+function openContactModal(contact, presetCompanyId){
+  const root = document.getElementById('modalRoot'); root.innerHTML='';
+  const overlay = el('div','overlay center');
+  const modal = el('div','modal');
+  modal.appendChild(el('h2',null, contact ? 'Modifier le contact' : 'Nouveau contact'));
+  const fields = {};
+  function field(key, labelText, type, val){
+    const f = el('div','field'); f.appendChild(el('label',null,labelText));
+    const input = type==='textarea' ? document.createElement('textarea') : document.createElement('input');
+    if(type && type!=='textarea') input.type = type;
+    input.value = val || ''; f.appendChild(input); modal.appendChild(f); fields[key]=input; return input;
+  }
+  field('nom','Nom', 'text', contact && contact.nom);
+  const compSel = document.createElement('select');
+  const blank = el('option',null,'— Aucune entreprise —'); blank.value=''; compSel.appendChild(blank);
+  state.companies.slice().sort((a,b)=>(a.nom||'').localeCompare(b.nom||'')).forEach(c=>{
+    const o = el('option',null,c.nom||'(sans nom)'); o.value=c.id;
+    if((contact && contact.entreprise_id===c.id) || (!contact && presetCompanyId===c.id)) o.selected=true;
+    compSel.appendChild(o);
+  });
+  const fComp = el('div','field'); fComp.appendChild(el('label',null,'Entreprise liée')); fComp.appendChild(compSel); modal.appendChild(fComp);
+  field('role','Rôle / fonction', 'text', contact && contact.role);
+  field('email','Email', 'email', contact && contact.email);
+  field('telephone','Téléphone', 'tel', contact && contact.telephone);
+  field('notes','Notes', 'textarea', contact && contact.notes);
+  const actions = el('div','drawer-footer');
+  if(contact){
+    const del = el('button','btn btn-danger','Supprimer');
+    del.addEventListener('click', async ()=>{ await deleteDoc('Contacts', contact.id); closeModal(); toast('Contact supprimé'); });
+    actions.appendChild(del);
+  } else actions.appendChild(el('div'));
+  const save = el('button','btn btn-primary', contact ? 'Enregistrer' : 'Créer');
+  save.addEventListener('click', async ()=>{
+    const data = { nom: fields.nom.value.trim(), entreprise_id: compSel.value || '', role: fields.role.value, email: fields.email.value, telephone: fields.telephone.value, notes: fields.notes.value };
+    if(!data.nom){ toast('Le nom est requis'); return; }
+    if(contact) await updateDoc('Contacts', contact.id, data); else await createDoc('Contacts', data);
+    closeModal(); toast(contact ? 'Contact mis à jour' : 'Contact créé');
+  });
+  actions.appendChild(save);
+  modal.appendChild(actions);
+  overlay.appendChild(modal);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
+  root.appendChild(overlay);
+}
+
+/* ---------------- B2C ---------------- */
+function renderB2C(){
+  document.getElementById('b2cSearch').value = state.b2cSearch;
+  const tbody = document.getElementById('b2cTbody'); tbody.innerHTML='';
+  const s = state.b2cSearch.toLowerCase();
+  const list = state.customers.filter(c=> !s || [c.nom,c.email,c.ville].join(' ').toLowerCase().includes(s))
+    .sort((a,b)=>(a.nom||'').localeCompare(b.nom||''));
+  if(list.length===0){ const tr=document.createElement('tr'); const td=document.createElement('td'); td.colSpan=6; td.className='empty'; td.textContent='Aucun client B2C pour le moment.'; tr.appendChild(td); tbody.appendChild(tr); return; }
+  list.forEach(c=>{
+    const tr = el('tr','leadrow'); tr.addEventListener('click', ()=>openB2CModal(c));
+    tr.appendChild(el('td',null, c.nom || '(sans nom)'));
+    tr.appendChild(el('td',null, c.canal || ''));
+    tr.appendChild(el('td',null, c.ville || ''));
+    tr.appendChild(el('td',null, c.date_derniere_commande ? fmtDateDisplay(c.date_derniere_commande) : '—'));
+    tr.appendChild(el('td',null, c.nb_commandes || 0));
+    tr.appendChild(el('td',null, fmtMoney(c.valeur_totale||0)));
+    tbody.appendChild(tr);
+  });
+}
+document.getElementById('b2cSearch').addEventListener('input', e=>{ state.b2cSearch=e.target.value; renderB2C(); });
+document.getElementById('addB2cBtn').addEventListener('click', ()=>openB2CModal(null));
+function openB2CModal(customer){
+  const root = document.getElementById('modalRoot'); root.innerHTML='';
+  const overlay = el('div','overlay');
+  const drawer = el('div','drawer');
+  const head = el('div','drawer-head');
+  head.appendChild(el('h2',null, customer ? (customer.nom||'(sans nom)') : 'Nouveau client'));
+  const closeBtn = el('button','close-x','✕'); closeBtn.addEventListener('click', closeModal);
+  head.appendChild(closeBtn); drawer.appendChild(head);
+  const fields = {};
+  function field(key, labelText, type){
+    const f = el('div','field'); f.appendChild(el('label',null,labelText));
+    const input = type==='textarea' ? document.createElement('textarea') : document.createElement('input');
+    if(type && type!=='textarea') input.type = type;
+    input.value = customer ? (customer[key] || '') : '';
+    f.appendChild(input); drawer.appendChild(f); fields[key]=input; return input;
+  }
+  field('nom','Nom');
+  field('email','Email','email');
+  field('telephone','Téléphone','tel');
+  field('ville','Ville');
+  const f = el('div','field'); f.appendChild(el('label',null,'Canal d’acquisition'));
+  const sel = document.createElement('select');
+  D.canauxB2C.forEach(c=>{ const o=el('option',null,c); o.value=c; if(customer && customer.canal===c) o.selected=true; sel.appendChild(o); });
+  f.appendChild(sel); drawer.appendChild(f); fields.canal=sel;
+  const dateRow = el('div','field-row');
+  const d1 = document.createElement('div'); d1.appendChild(el('label',null,'1ère commande')); const i1=document.createElement('input'); i1.type='date'; i1.value = customer && parseISODate(customer.date_premiere_commande) ? customer.date_premiere_commande : ''; d1.appendChild(i1);
+  const d2 = document.createElement('div'); d2.appendChild(el('label',null,'Dernière commande')); const i2=document.createElement('input'); i2.type='date'; i2.value = customer && parseISODate(customer.date_derniere_commande) ? customer.date_derniere_commande : ''; d2.appendChild(i2);
+  dateRow.appendChild(d1); dateRow.appendChild(d2); drawer.appendChild(dateRow);
+  fields.date_premiere_commande=i1; fields.date_derniere_commande=i2;
+  const numRow = el('div','field-row');
+  const n1 = document.createElement('div'); n1.appendChild(el('label',null,'Nb commandes')); const ni1=document.createElement('input'); ni1.type='number'; ni1.value = customer ? (customer.nb_commandes||0) : 0; n1.appendChild(ni1);
+  const n2 = document.createElement('div'); n2.appendChild(el('label',null,'Valeur totale (€)')); const ni2=document.createElement('input'); ni2.type='number'; ni2.value = customer ? (customer.valeur_totale||0) : 0; n2.appendChild(ni2);
+  numRow.appendChild(n1); numRow.appendChild(n2); drawer.appendChild(numRow);
+  fields.nb_commandes=ni1; fields.valeur_totale=ni2;
+  const cb = el('label','checkbox-row'); const cbi=document.createElement('input'); cbi.type='checkbox'; cbi.checked = customer ? (customer.newsletter===true || customer.newsletter==='TRUE' || customer.newsletter==='true') : false;
+  cb.appendChild(cbi); cb.appendChild(document.createTextNode('Inscrit à la newsletter')); drawer.appendChild(cb); fields.newsletter=cbi;
+  field('notes','Notes','textarea');
+  const footer = el('div','drawer-footer');
+  if(customer){
+    const del = el('button','btn btn-danger','Supprimer');
+    del.addEventListener('click', async ()=>{ if(confirm('Supprimer ce client ?')){ await deleteDoc('Clients_B2C', customer.id); closeModal(); toast('Client supprimé'); } });
+    footer.appendChild(del);
+  } else footer.appendChild(el('div'));
+  const save = el('button','btn btn-primary', customer ? 'Enregistrer' : 'Créer');
+  save.addEventListener('click', async ()=>{
+    const data = {
+      nom: fields.nom.value.trim(), email: fields.email.value, telephone: fields.telephone.value, ville: fields.ville.value,
+      canal: fields.canal.value, date_premiere_commande: fields.date_premiere_commande.value, date_derniere_commande: fields.date_derniere_commande.value,
+      nb_commandes: Number(fields.nb_commandes.value)||0, valeur_totale: Number(fields.valeur_totale.value)||0,
+      newsletter: fields.newsletter.checked, notes: fields.notes.value,
+    };
+    if(!data.nom){ toast('Le nom est requis'); return; }
+    if(customer) await updateDoc('Clients_B2C', customer.id, data); else await createDoc('Clients_B2C', data);
+    closeModal(); toast(customer ? 'Client mis à jour' : 'Client créé');
+  });
+  footer.appendChild(save);
+  drawer.appendChild(footer);
+  overlay.appendChild(drawer);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
+  root.appendChild(overlay);
+}
+
+/* ---------------- boot ---------------- */
+boot();
+})();
+</script>
+</body>
+</html>
