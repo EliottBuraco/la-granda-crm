@@ -40,8 +40,9 @@ button{cursor:pointer;}
 
 #app{display:flex;flex-direction:column;min-height:100vh;}
 .topbar{display:flex;align-items:center;gap:18px;padding:14px 22px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:30;}
-.brand{display:flex;align-items:baseline;gap:8px;}
-.brand h1{font-family:var(--font-logo);font-size:26px;text-transform:none;letter-spacing:0;line-height:1;margin:0;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-logo{height:38px;width:auto;display:block;}
+:root[data-theme="dark"] .brand-logo{filter:invert(1);}
 .brand-text span{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;display:block;margin-top:2px;}
 .topbar .spacer{flex:1;}
 .syncbox{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-muted);}
@@ -108,19 +109,19 @@ a{color:var(--primary);}
 .goal-fill{height:100%;background:var(--success);}
 .goal-meta{font-size:11.5px;color:var(--text-muted);display:flex;justify-content:space-between;}
 
-.kanban{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;}
-.kanban-col{flex:0 0 230px;display:flex;flex-direction:column;}
-.kanban-col-head{padding:9px 12px;border:1.5px solid var(--border);display:flex;justify-content:space-between;align-items:baseline;}
-.kanban-col-head .t{font-weight:800;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;}
-.kanban-col-head .n{font-size:10px;opacity:.9;font-weight:700;}
-.kanban-col-body{flex:1;background:var(--surface);border:1.5px solid var(--border);border-top:none;padding:8px;min-height:120px;display:flex;flex-direction:column;gap:8px;}
-.kcard{background:var(--surface);border:1.5px solid var(--border-soft);border-radius:var(--radius);padding:10px 11px;cursor:pointer;}
+.kanban{display:flex;gap:16px;overflow-x:auto;padding-bottom:10px;}
+.kanban-col{flex:0 0 272px;display:flex;flex-direction:column;}
+.kanban-col-head{padding:11px 14px;border:1.5px solid var(--border);background:var(--surface);display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.kanban-col-head .t{font-weight:800;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;display:flex;align-items:center;gap:8px;}
+.kanban-col-head .n{font-size:11px;color:var(--text-muted);font-weight:700;}
+.stage-dot{width:9px;height:9px;border-radius:50%;flex:none;}
+.kanban-col-body{flex:1;background:var(--surface-2);border:1.5px solid var(--border);border-top:none;padding:10px;min-height:120px;display:flex;flex-direction:column;gap:10px;}
+.kcard{background:var(--surface);border:1.5px solid var(--border-soft);border-radius:var(--radius);padding:14px 16px;cursor:pointer;}
 .kcard:hover{border-color:var(--border);}
-.kcard .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:5px;}
-.kcard .nom{font-weight:700;font-size:13px;}
-.kcard .meta{font-size:11px;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:5px;}
-.kcard select{font-size:11px;padding:4px 6px;margin-top:8px;}
-.avatar-chip{width:18px;height:18px;border-radius:50%;background:var(--surface-3);color:var(--text);border:1px solid var(--border-soft);font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;}
+.kcard .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
+.kcard .nom{font-weight:700;font-size:14.5px;}
+.kcard .meta{font-size:12px;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.avatar-chip{width:20px;height:20px;border-radius:50%;background:var(--surface-3);color:var(--text);border:1px solid var(--border-soft);font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;}
 
 table{width:100%;border-collapse:collapse;font-size:13px;}
 th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);padding:9px 10px;border-bottom:1.5px solid var(--border);white-space:nowrap;font-weight:700;}
@@ -154,6 +155,18 @@ details.more[open] summary{color:var(--text);}
 .linked-contact{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-soft);font-size:13px;}
 .linked-contact:last-child{border-bottom:none;}
 
+.tournee-city{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:18px 0 8px;}
+.tournee-city:first-child{margin-top:0;}
+.tournee-row{display:flex;align-items:center;gap:12px;padding:11px 14px;border:1.5px solid var(--border-soft);border-radius:var(--radius);background:var(--surface);margin-bottom:8px;cursor:pointer;}
+.tournee-row:hover{border-color:var(--border);}
+.tournee-row input[type=checkbox]{width:auto;flex:none;}
+.tournee-row .nom{font-weight:700;font-size:13.5px;flex:1;}
+.tournee-row .sub{font-size:11.5px;color:var(--text-muted);}
+.tournee-bar{position:sticky;bottom:0;display:none;align-items:center;gap:14px;background:var(--text);color:var(--bg);padding:14px 18px;border-radius:var(--radius);margin-top:16px;font-weight:700;font-size:13px;}
+.tournee-bar.show{display:flex;}
+.tournee-bar .spacer{flex:1;}
+.tournee-bar .btn{background:var(--bg);color:var(--text);border-color:var(--bg);}
+.tournee-bar .btn-ghost-inv{background:transparent;color:var(--bg);border-color:var(--bg);}
 .empty{padding:36px 20px;text-align:center;color:var(--text-muted);}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:9px 18px;border-radius:var(--radius);font-size:13px;z-index:200;font-weight:600;border:1.5px solid var(--text);}
 
@@ -167,7 +180,7 @@ details.more[open] summary{color:var(--text);}
 <div id="app">
   <div class="topbar">
     <div class="brand">
-      <h1>La Granda</h1>
+      <img class="brand-logo" src="assets/logo-la-granda.png" alt="La Granda">
       <div class="brand-text"><span>CRM</span></div>
     </div>
     <div class="spacer"></div>
@@ -178,6 +191,7 @@ details.more[open] summary{color:var(--text);}
     <button class="tab active" data-view="dashboard">Dashboard</button>
     <button class="tab" data-view="objectifs">Objectifs</button>
     <button class="tab" data-view="pipeline">Pipeline</button>
+    <button class="tab" data-view="tournee">Tournée</button>
     <button class="tab" data-view="entreprises">Entreprises</button>
     <button class="tab" data-view="contacts">Contacts</button>
     <button class="tab" data-view="b2c">Clients B2C</button>
@@ -211,6 +225,12 @@ details.more[open] summary{color:var(--text);}
     <section class="view" id="view-pipeline">
       <div class="toolbar" id="pipelineToolbar"></div>
       <div class="kanban" id="kanban"></div>
+    </section>
+
+    <section class="view" id="view-tournee">
+      <div class="toolbar" id="tourneeToolbar"></div>
+      <div id="tourneeList"></div>
+      <div class="tournee-bar" id="tourneeBar"></div>
     </section>
 
     <section class="view" id="view-entreprises">
@@ -366,8 +386,12 @@ const state = {
   activeView: 'dashboard',
   companyFilters: { search:'', persona:'', owner:'', priorite:'', objectif:'' },
   contactsSearch: '', b2cSearch: '',
+  tourneeFilters: { search:'', ville:'' },
   ready: false,
 };
+let tourneeSelected = new Set();
+try{ tourneeSelected = new Set(JSON.parse(localStorage.getItem('granda_tournee_selection')||'[]')); }catch(e){}
+function saveTourneeSelection(){ try{ localStorage.setItem('granda_tournee_selection', JSON.stringify(Array.from(tourneeSelected))); }catch(e){} }
 
 /* ---------------- boot / setup ---------------- */
 function showSetupScreen(){
@@ -442,6 +466,7 @@ function renderCurrentView(){
   if(state.activeView==='dashboard') renderDashboard();
   else if(state.activeView==='objectifs') renderGoals();
   else if(state.activeView==='pipeline') renderPipeline();
+  else if(state.activeView==='tournee') renderTournee();
   else if(state.activeView==='entreprises') renderEntreprises();
   else if(state.activeView==='contacts') renderContacts();
   else if(state.activeView==='b2c') renderB2C();
@@ -622,17 +647,17 @@ function renderPipeline(){
     const sc = stageColor(stage);
     const col = el('div','kanban-col');
     const head = el('div','kanban-col-head');
-    head.style.background = sc.bg; head.style.color = sc.fg;
-    head.appendChild(el('span','t',stage));
+    const t = el('span','t');
+    const dot = el('span','stage-dot'); dot.style.background = sc.bg;
+    t.appendChild(dot); t.appendChild(document.createTextNode(stage));
+    head.appendChild(t);
     const inStage = companies.filter(l=>l.stage===stage);
     head.appendChild(el('span','n', inStage.length+' · '+fmtMoney(inStage.reduce((s,l)=>s+(Number(l.valeur)||0),0))));
     col.appendChild(head);
     const body = el('div','kanban-col-body');
-    body.style.background = sc.tint;
     if(inStage.length===0) body.appendChild(el('div','muted','—'));
     inStage.forEach(l=>{
       const card = el('div','kcard');
-      card.style.borderLeft = '4px solid '+sc.bg;
       const top = el('div','top-row');
       top.appendChild(el('span','nom', l.nom || '(sans nom)'));
       top.appendChild(pepperRating(l.priorite));
@@ -646,11 +671,6 @@ function renderPipeline(){
         meta.appendChild(span);
       }
       card.appendChild(meta);
-      const sel = document.createElement('select');
-      STAGE_ORDER.forEach(s=>{ const o=el('option',null,s); o.value=s; if(s===l.stage) o.selected=true; sel.appendChild(o); });
-      sel.addEventListener('click', e=>e.stopPropagation());
-      sel.addEventListener('change', e=>{ e.stopPropagation(); updateDoc('Entreprises', l.id, {stage:e.target.value}).then(()=>toast('Étape mise à jour')); });
-      card.appendChild(sel);
       card.addEventListener('click', ()=>openCompanyDetail(l.id));
       body.appendChild(card);
     });
@@ -659,6 +679,69 @@ function renderPipeline(){
   });
 }
 function elAvatar(owner){ const a = el('span','avatar-chip', initials(owner)); a.title = owner; return a; }
+
+/* ---------------- TOURNÉE ---------------- */
+function renderTournee(){
+  const toolbar = document.getElementById('tourneeToolbar'); toolbar.innerHTML='';
+  const f = state.tourneeFilters;
+  const search = document.createElement('input'); search.type='search'; search.placeholder='Rechercher une entreprise…'; search.value=f.search;
+  search.addEventListener('input', e=>{ f.search=e.target.value; renderTournee(); });
+  toolbar.appendChild(search);
+  const villes = Array.from(new Set(state.companies.map(l=>l.ville_pays).filter(Boolean))).sort((a,b)=>a.localeCompare(b));
+  const villeSel = document.createElement('select');
+  const opt0 = el('option',null,'Toutes villes'); opt0.value=''; villeSel.appendChild(opt0);
+  villes.forEach(v=>{ const o=el('option',null,v); o.value=v; if(f.ville===v) o.selected=true; villeSel.appendChild(o); });
+  villeSel.addEventListener('change', e=>{ f.ville=e.target.value; renderTournee(); });
+  toolbar.appendChild(villeSel);
+  toolbar.appendChild(el('div','spacer'));
+
+  let companies = state.companies.filter(l=>l.stage!==KO);
+  if(f.ville) companies = companies.filter(l=>l.ville_pays===f.ville);
+  if(f.search){
+    const s = f.search.toLowerCase();
+    companies = companies.filter(l=>[l.nom,l.ville_pays].join(' ').toLowerCase().includes(s));
+  }
+  companies = companies.slice().sort((a,b)=> (a.ville_pays||'').localeCompare(b.ville_pays||'') || (a.nom||'').localeCompare(b.nom||''));
+
+  const list = document.getElementById('tourneeList'); list.innerHTML='';
+  if(companies.length===0){ list.appendChild(el('div','empty','Aucune entreprise ne correspond.')); }
+  let lastCity = null;
+  companies.forEach(l=>{
+    const city = l.ville_pays || 'Ville non renseignée';
+    if(city !== lastCity){ list.appendChild(el('div','tournee-city',city)); lastCity = city; }
+    const row = el('div','tournee-row');
+    const cb = document.createElement('input'); cb.type='checkbox'; cb.checked = tourneeSelected.has(l.id);
+    cb.addEventListener('click', e=>e.stopPropagation());
+    cb.addEventListener('change', ()=>{ if(cb.checked) tourneeSelected.add(l.id); else tourneeSelected.delete(l.id); saveTourneeSelection(); renderTourneeBar(); });
+    row.appendChild(cb);
+    row.appendChild(el('span','nom', l.nom || '(sans nom)'));
+    const sc = stageColor(l.stage);
+    const chip = el('span','stage-chip', l.stage); chip.style.background=sc.bg; chip.style.color=sc.fg; chip.style.fontSize='9px';
+    row.appendChild(chip);
+    row.appendChild(el('span','sub', l.persona||''));
+    row.addEventListener('click', ()=>{ cb.checked=!cb.checked; cb.dispatchEvent(new Event('change')); });
+    list.appendChild(row);
+  });
+  renderTourneeBar();
+}
+function renderTourneeBar(){
+  const bar = document.getElementById('tourneeBar'); bar.innerHTML='';
+  const ids = Array.from(tourneeSelected);
+  const selected = state.companies.filter(l=>ids.includes(l.id));
+  if(selected.length===0){ bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  bar.appendChild(el('span',null, selected.length+' arrêt'+(selected.length>1?'s':'')+' sélectionné'+(selected.length>1?'s':'')));
+  bar.appendChild(el('div','spacer'));
+  const clearBtn = el('button','btn btn-ghost-inv btn-sm','Vider');
+  clearBtn.addEventListener('click', ()=>{ tourneeSelected.clear(); saveTourneeSelection(); renderTournee(); });
+  bar.appendChild(clearBtn);
+  const goBtn = el('button','btn btn-sm','Ouvrir l’itinéraire →');
+  goBtn.addEventListener('click', ()=>{
+    const stops = selected.map(l=> encodeURIComponent([l.nom, l.ville_pays, 'France'].filter(Boolean).join(', ')) );
+    window.open('https://www.google.com/maps/dir/'+stops.join('/'), '_blank');
+  });
+  bar.appendChild(goBtn);
+}
 
 /* ---------------- ENTREPRISES ---------------- */
 function renderEntreprises(){
