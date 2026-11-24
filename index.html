@@ -10,24 +10,25 @@
 /* Light by default, always — dark only when the user flips the switch (data-theme="dark" on <html>). No prefers-color-scheme auto-detect. */
 :root{
   --bg:#FFFFFF; --surface:#FFFFFF; --surface-2:#F7F7F5; --surface-3:#EFEDE8;
-  --text:#141414; --text-muted:#6B6B6B; --border:#141414; --border-soft:#E2DFD8;
-  --primary:#E8392E; --primary-dark:#C22A20;
-  --success:#2E7D4F; --warn:#B8791E;
-  --phase-prospection:#3E8E72; --phase-qualification:#D9722E; --phase-negociation:#8B6FB8;
+  --text:#141414; --text-muted:#6B6B6B; --border:#E7E4DD; --border-soft:#E7E4DD; --border-strong:#141414;
+  --primary:#FF3B2E; --primary-dark:#C22A20; --primary-tint:#FFE7E3;
+  --success:#1FAE63; --warn:#FFB400;
+  --phase-prospection:#1FAE63; --phase-qualification:#FF8A1E; --phase-negociation:#9B5DE5;
   --phase-actif-bg:#141414; --phase-actif-fg:#FFFFFF;
   --phase-perdu-bg:#EFEDE8; --phase-perdu-fg:#6B6B6B;
-  --radius:3px; --shadow:3px 3px 0 var(--text);
+  --radius:12px; --radius-sm:8px; --radius-pill:999px;
+  --shadow:0 10px 28px rgba(20,20,20,.09); --shadow-sm:0 2px 10px rgba(20,20,20,.06);
   --font-display:'Archivo Black',Impact,sans-serif; --font-logo:'Permanent Marker',cursive; --font-body:'Inter',system-ui,sans-serif;
 }
 :root[data-theme="dark"]{
   --bg:#141414; --surface:#1C1C1C; --surface-2:#232323; --surface-3:#2B2B2B;
-  --text:#F2F0EC; --text-muted:#A6A29A; --border:#F2F0EC; --border-soft:#3A3A3A;
-  --primary:#FF6B5A; --primary-dark:#E8392E;
-  --success:#4FAE75; --warn:#E0A041;
-  --phase-prospection:#5BAE91; --phase-qualification:#E68E4E; --phase-negociation:#A98FD1;
+  --text:#F2F0EC; --text-muted:#A6A29A; --border:#333131; --border-soft:#333131; --border-strong:#F2F0EC;
+  --primary:#FF6B5A; --primary-dark:#E8392E; --primary-tint:#3A201C;
+  --success:#38C27F; --warn:#FFC94D;
+  --phase-prospection:#38C27F; --phase-qualification:#FFA64D; --phase-negociation:#B98CF0;
   --phase-actif-bg:#F2F0EC; --phase-actif-fg:#141414;
   --phase-perdu-bg:#2B2B2B; --phase-perdu-fg:#9A968E;
-  --shadow:3px 3px 0 rgba(0,0,0,.7);
+  --shadow:0 10px 28px rgba(0,0,0,.45); --shadow-sm:0 2px 10px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.45;}
@@ -38,35 +39,36 @@ button{cursor:pointer;}
 ::-webkit-scrollbar{height:9px;width:9px;}
 ::-webkit-scrollbar-thumb{background:var(--border-soft);border-radius:0;}
 
-#app{display:flex;flex-direction:column;min-height:100vh;}
-.topbar{display:flex;align-items:center;gap:18px;padding:14px 22px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:30;}
-.brand{display:flex;align-items:center;gap:10px;}
-.brand-logo{height:38px;width:auto;display:block;}
+#app{display:flex;min-height:100vh;}
+.sidebar{width:230px;flex:none;display:flex;flex-direction:column;background:var(--surface);border-right:1px solid var(--border-soft);padding:22px 16px;position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;z-index:30;}
+.brand{display:flex;align-items:center;gap:10px;padding:0 4px;}
+.brand-logo{height:36px;width:auto;display:block;}
 :root[data-theme="dark"] .brand-logo{filter:invert(1);}
 .brand-text span{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;display:block;margin-top:2px;}
-.topbar .spacer{flex:1;}
-.syncbox{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-muted);}
-.syncdot{width:7px;height:7px;border-radius:50%;background:var(--success);}
+.tabs{display:flex;flex-direction:column;gap:4px;margin-top:28px;}
+.tab{display:block;width:100%;text-align:left;padding:12px 14px;font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;color:var(--text);border:none;border-radius:var(--radius);white-space:nowrap;background:transparent;}
+.tab.active{background:var(--primary-tint);color:var(--primary-dark);}
+.tab:hover:not(.active){background:var(--surface-2);}
+.sidebar-spacer{flex:1;}
+.sidebar-footer{display:flex;align-items:center;gap:10px;padding-top:16px;margin-top:16px;border-top:1px solid var(--border-soft);}
+.syncbox{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text-muted);flex:1;min-width:0;}
+.syncdot{width:7px;height:7px;border-radius:50%;background:var(--success);flex:none;}
 .syncdot.syncing{background:var(--warn);}
 .syncdot.err{background:var(--primary);}
-.theme-toggle{border:1.5px solid var(--border);background:var(--surface);border-radius:var(--radius);padding:6px 9px;font-size:13px;line-height:1;}
-.tabs{display:flex;gap:8px;padding:14px 22px;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;}
-.tab{padding:8px 14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;color:var(--text);border:1.5px solid var(--border);border-radius:var(--radius);white-space:nowrap;background:var(--surface);}
-.tab.active{background:var(--text);color:var(--bg);}
-.tab:hover:not(.active){background:var(--surface-2);}
-main{flex:1;padding:22px;width:100%;}
+.theme-toggle{border:1.5px solid var(--border-strong);background:var(--surface);border-radius:var(--radius-sm);padding:7px 10px;font-size:13px;line-height:1;flex:none;}
+main{flex:1;min-width:0;padding:28px 32px;width:100%;}
 .view{display:none;max-width:1280px;width:100%;margin:0 auto;}
 .view.active{display:block;}
 #view-pipeline{max-width:none;}
 
-.card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius);border:1.5px solid var(--border);background:var(--surface);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;}
+.card{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius);box-shadow:var(--shadow-sm);}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:11px 18px;border-radius:var(--radius);border:1.5px solid var(--border-strong);background:var(--surface);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;}
 .btn:hover{background:var(--surface-2);}
-.btn-primary{background:var(--text);border-color:var(--text);color:var(--bg);}
-.btn-primary:hover{background:var(--primary);border-color:var(--primary-dark);color:#fff;}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-dark);border-color:var(--primary-dark);color:#fff;}
 .btn-ghost{background:transparent;border-color:transparent;}
 .btn-danger{color:var(--primary);border-color:var(--primary);}
-.btn-sm{padding:6px 10px;font-size:11px;}
+.btn-sm{padding:8px 12px;font-size:11px;}
 .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:var(--radius);font-size:11px;font-weight:700;border:1.5px solid var(--border);background:var(--surface);}
 input[type=text],input[type=email],input[type=number],input[type=date],input[type=url],input[type=search],input[type=tel],select,textarea{
   width:100%;padding:8px 10px;border:1.5px solid var(--border-soft);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:13.5px;
@@ -87,14 +89,22 @@ a{color:var(--primary);}
 .toolbar select, .toolbar input[type=search]{width:auto;min-width:120px;}
 .toolbar .spacer{flex:1;}
 
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px;}
-.kpi{padding:16px 18px;}
-.kpi.hero{background:var(--primary);border-color:var(--text);color:#141414;}
-.kpi .num{font-family:var(--font-display);font-size:26px;line-height:1;font-variant-numeric:tabular-nums;}
-.kpi .lbl{font-size:11px;color:var(--text-muted);margin-top:5px;text-transform:uppercase;letter-spacing:.03em;font-weight:700;}
-.kpi.hero .lbl{color:#141414;opacity:.75;}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px;}
+.kpi{padding:18px 20px;}
+.kpi.hero{background:var(--primary);border-color:var(--primary);color:#fff;}
+.kpi .num{font-family:var(--font-display);font-size:30px;line-height:1;font-variant-numeric:tabular-nums;}
+.kpi .lbl{font-size:11px;color:var(--text-muted);margin-top:6px;text-transform:uppercase;letter-spacing:.03em;font-weight:700;}
+.kpi.hero .lbl{color:#fff;opacity:.85;}
 .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 @media (max-width:900px){.dash-grid{grid-template-columns:1fr;} .field-row{grid-template-columns:1fr;}}
+@media (max-width:760px){
+  #app{flex-direction:column;}
+  .sidebar{width:100%;height:auto;position:relative;flex-direction:row;align-items:center;padding:12px 16px;overflow-x:auto;}
+  .tabs{flex-direction:row;margin-top:0;margin-left:14px;gap:6px;}
+  .sidebar-spacer{display:none;}
+  .sidebar-footer{border-top:none;margin-top:0;padding-top:0;margin-left:auto;padding-left:14px;}
+  main{padding:18px;}
+}
 .panel{padding:18px;margin-bottom:16px;}
 .panel h3{font-size:14px;margin:0 0 14px;}
 .action-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-soft);font-size:13px;cursor:pointer;}
@@ -110,15 +120,15 @@ a{color:var(--primary);}
 .goal-fill{height:100%;background:var(--success);}
 .goal-meta{font-size:11.5px;color:var(--text-muted);display:flex;justify-content:space-between;}
 
-.kanban{display:flex;gap:16px;overflow-x:auto;padding-bottom:10px;}
-.kanban-col{flex:1 1 240px;min-width:240px;display:flex;flex-direction:column;}
-.kanban-col-head{padding:11px 14px;border:1.5px solid var(--border);background:var(--surface);display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.kanban{display:flex;gap:18px;overflow-x:auto;padding-bottom:10px;}
+.kanban-col{flex:1 1 240px;min-width:240px;display:flex;flex-direction:column;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);background:var(--surface-2);}
+.kanban-col-head{padding:13px 16px;background:var(--surface);border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;gap:8px;}
 .kanban-col-head .t{font-weight:800;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;display:flex;align-items:center;gap:8px;}
 .kanban-col-head .n{font-size:11px;color:var(--text-muted);font-weight:700;}
-.stage-dot{width:9px;height:9px;border-radius:50%;flex:none;}
-.kanban-col-body{flex:1;background:var(--surface-2);border:1.5px solid var(--border);border-top:none;padding:10px;min-height:120px;display:flex;flex-direction:column;gap:10px;}
-.kcard{background:var(--surface);border:1.5px solid var(--border-soft);border-radius:var(--radius);padding:14px 16px;cursor:pointer;}
-.kcard:hover{border-color:var(--border);}
+.stage-dot{width:10px;height:10px;border-radius:50%;flex:none;}
+.kanban-col-body{flex:1;padding:12px;min-height:120px;display:flex;flex-direction:column;gap:10px;}
+.kcard{background:var(--surface);border:1px solid var(--border-soft);border-radius:var(--radius-sm);padding:14px 16px;cursor:pointer;}
+.kcard:hover{box-shadow:var(--shadow-sm);}
 .kcard .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
 .kcard .nom{font-weight:700;font-size:14.5px;}
 .kcard .meta{font-size:12px;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
@@ -129,17 +139,22 @@ th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.04e
 td{padding:9px 10px;border-bottom:1px solid var(--border-soft);vertical-align:middle;}
 tr.leadrow{cursor:pointer;}
 tr.leadrow:hover{background:var(--surface-2);}
-.table-wrap{overflow-x:auto;border:1.5px solid var(--border);background:var(--surface);}
+.table-wrap{overflow-x:auto;border:1px solid var(--border-soft);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow-sm);}
 .table-wrap table{min-width:760px;}
 .stage-chip{display:inline-block;padding:3px 8px;border-radius:var(--radius);font-size:10px;font-weight:800;text-transform:uppercase;border:1px solid var(--border);}
 
 .overlay{position:fixed;inset:0;background:rgba(10,10,10,.5);z-index:90;display:flex;justify-content:flex-end;}
 .overlay.center{justify-content:center;align-items:center;}
-.drawer{width:min(440px,92vw);background:var(--surface);height:100%;overflow-y:auto;padding:22px;border-left:1.5px solid var(--border);}
+.drawer{width:min(440px,92vw);background:var(--surface);height:100%;overflow-y:auto;padding:22px;box-shadow:var(--shadow);transition:width .15s ease;}
+.drawer.expanded{width:min(980px,94vw);}
 .modal{width:min(400px,92vw);background:var(--surface);border-radius:var(--radius);border:1.5px solid var(--border);padding:22px;box-shadow:var(--shadow);}
 .drawer-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:10px;}
 .drawer-head h2{font-size:18px;margin:0;text-transform:none;font-family:var(--font-body);font-weight:800;}
-.close-x{background:none;border:none;font-size:20px;color:var(--text-muted);line-height:1;padding:4px;}
+.drawer-head-actions{display:flex;align-items:center;gap:2px;flex:none;}
+.close-x,.expand-btn{background:none;border:none;font-size:18px;color:var(--text-muted);line-height:1;padding:4px 6px;}
+.close-x:hover,.expand-btn:hover{color:var(--text);}
+.expand-btn{font-size:15px;}
+.drawer.expanded .drawer-body{display:grid;grid-template-columns:1fr 1fr;gap:0 32px;align-items:start;}
 .section-title{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:18px 0 10px;border-top:1px solid var(--border-soft);padding-top:14px;}
 .section-title:first-of-type{border-top:none;margin-top:0;padding-top:0;}
 .drawer-footer{display:flex;justify-content:space-between;margin-top:20px;padding-top:16px;border-top:1px solid var(--border-soft);}
@@ -155,6 +170,24 @@ details.more[open] summary{color:var(--text);}
 
 .linked-contact{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-soft);font-size:13px;}
 .linked-contact:last-child{border-bottom:none;}
+
+.feed-composer{border-top:1px solid var(--border-soft);padding-top:12px;margin-bottom:16px;}
+.feed-composer textarea{margin-bottom:8px;min-height:50px;}
+.feed-composer-row{display:flex;gap:8px;align-items:center;}
+.feed-composer-row select{width:auto;flex:none;}
+.feed-composer-commande{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;border-top:1px solid var(--border-soft);padding-top:12px;margin-bottom:10px;}
+.feed-composer-commande .mini-field{display:flex;flex-direction:column;gap:3px;}
+.feed-composer-commande .mini-field input{width:auto;}
+.feed-composer-commande .mini-field.grow{flex:1;min-width:140px;}
+.feed-composer-commande label{margin:0;}
+.feed{display:flex;flex-direction:column;gap:10px;margin-bottom:6px;}
+.feed-item{border:1px solid var(--border-soft);border-radius:var(--radius);padding:10px 12px;background:var(--surface);}
+.feed-item-commande{background:var(--surface-2);}
+.feed-item-legacy{opacity:.75;}
+.feed-item-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:4px;}
+.feed-auteur{font-weight:800;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;}
+.feed-date{font-size:10.5px;color:var(--text-muted);white-space:nowrap;}
+.feed-text{font-size:13px;white-space:pre-wrap;}
 
 .tournee-city{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin:18px 0 8px;}
 .tournee-city:first-child{margin-top:0;}
@@ -179,24 +212,26 @@ details.more[open] summary{color:var(--text);}
 <body>
 
 <div id="app">
-  <div class="topbar">
+  <aside class="sidebar">
     <div class="brand">
       <img class="brand-logo" src="assets/logo-la-granda.png" alt="La Granda">
       <div class="brand-text"><span>CRM</span></div>
     </div>
-    <div class="spacer"></div>
-    <div class="syncbox" id="syncBox"><span class="syncdot" id="syncDot"></span><span id="syncLabel">—</span></div>
-    <button class="theme-toggle" id="themeToggle" title="Changer de thème">☀︎</button>
-  </div>
-  <div class="tabs" id="tabs">
-    <button class="tab active" data-view="dashboard">Dashboard</button>
-    <button class="tab" data-view="objectifs">Objectifs</button>
-    <button class="tab" data-view="pipeline">Pipeline</button>
-    <button class="tab" data-view="tournee">Tournée</button>
-    <button class="tab" data-view="entreprises">Entreprises</button>
-    <button class="tab" data-view="contacts">Contacts</button>
-    <button class="tab" data-view="b2c">Clients B2C</button>
-  </div>
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-view="dashboard">Dashboard</button>
+      <button class="tab" data-view="objectifs">Objectifs</button>
+      <button class="tab" data-view="pipeline">Pipeline</button>
+      <button class="tab" data-view="tournee">Tournée</button>
+      <button class="tab" data-view="entreprises">Entreprises</button>
+      <button class="tab" data-view="contacts">Contacts</button>
+      <button class="tab" data-view="b2c">Clients B2C</button>
+    </div>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-footer">
+      <div class="syncbox" id="syncBox"><span class="syncdot" id="syncDot"></span><span id="syncLabel">—</span></div>
+      <button class="theme-toggle" id="themeToggle" title="Changer de thème">☀︎</button>
+    </div>
+  </aside>
 
   <main>
     <div id="setupScreen" class="hidden"></div>
@@ -333,6 +368,13 @@ function fmtDateDisplay(s){
   return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
 }
 function ownersList(s){ return String(s||'').split(',').map(x=>x.trim()).filter(Boolean); }
+function parseLog(raw){ try{ const v = JSON.parse(raw||'[]'); return Array.isArray(v) ? v : []; }catch(e){ return []; } }
+function fmtDateTimeDisplay(iso){
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return iso || '';
+  return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) + ' · ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+}
+function debounce(fn, ms){ let t; return function(...args){ clearTimeout(t); t=setTimeout(()=>fn.apply(this,args), ms); }; }
 function toast(msg){
   const t = el('div','toast',msg);
   document.getElementById('toastRoot').appendChild(t);
@@ -486,7 +528,12 @@ document.getElementById('tabs').addEventListener('click', e=>{
 function renderCompanyFilterToolbar(container, opts){
   container.innerHTML='';
   const search = el('input'); search.type='search'; search.placeholder='Rechercher une entreprise…'; search.value=state.companyFilters.search;
-  search.addEventListener('input', e=>{ state.companyFilters.search=e.target.value; renderCurrentView(); });
+  const triggerCompanySearch = debounce(()=>{
+    renderCurrentView();
+    const freshInput = container.querySelector('input[type=search]');
+    if(freshInput){ freshInput.focus(); const v=freshInput.value; freshInput.setSelectionRange(v.length, v.length); }
+  }, 300);
+  search.addEventListener('input', e=>{ state.companyFilters.search=e.target.value; triggerCompanySearch(); });
   container.appendChild(search);
   function mkSelect(key, values, label){
     const s = document.createElement('select');
@@ -686,7 +733,12 @@ function renderTournee(){
   const toolbar = document.getElementById('tourneeToolbar'); toolbar.innerHTML='';
   const f = state.tourneeFilters;
   const search = document.createElement('input'); search.type='search'; search.placeholder='Rechercher une entreprise…'; search.value=f.search;
-  search.addEventListener('input', e=>{ f.search=e.target.value; renderTournee(); });
+  const triggerTourneeSearch = debounce(()=>{
+    renderTournee();
+    const freshInput = toolbar.querySelector('input[type=search]');
+    if(freshInput){ freshInput.focus(); const v=freshInput.value; freshInput.setSelectionRange(v.length, v.length); }
+  }, 300);
+  search.addEventListener('input', e=>{ f.search=e.target.value; triggerTourneeSearch(); });
   toolbar.appendChild(search);
   const villes = Array.from(new Set(state.companies.map(l=>l.ville_pays).filter(Boolean))).sort((a,b)=>a.localeCompare(b));
   const villeSel = document.createElement('select');
@@ -738,7 +790,7 @@ function renderTourneeBar(){
   bar.appendChild(clearBtn);
   const goBtn = el('button','btn btn-sm','Ouvrir l’itinéraire →');
   goBtn.addEventListener('click', ()=>{
-    const stops = selected.map(l=> encodeURIComponent([l.nom, l.ville_pays, 'France'].filter(Boolean).join(', ')) );
+    const stops = selected.map(l=> encodeURIComponent(l.localisation ? l.localisation : [l.nom, l.ville_pays, 'France'].filter(Boolean).join(', ')) );
     window.open('https://www.google.com/maps/dir/'+stops.join('/'), '_blank');
   });
   bar.appendChild(goBtn);
@@ -813,6 +865,87 @@ function openAddCompanyModal(){
 }
 function closeModal(){ document.getElementById('modalRoot').innerHTML=''; }
 
+/* ---------------- notes & order-history feed (used by company + contact detail) ---------------- */
+function renderFeed(container, opts){
+  container.innerHTML = '';
+  if(opts.onAddCommande){
+    const cForm = el('div','feed-composer-commande');
+    const dField = el('div','mini-field'); dField.appendChild(el('label',null,'Date')); const dInput=document.createElement('input'); dInput.type='date'; dInput.value=todayISO(); dField.appendChild(dInput);
+    const mField = el('div','mini-field'); mField.appendChild(el('label',null,'Montant (€)')); const mInput=document.createElement('input'); mInput.type='number'; mInput.step='0.01'; mField.appendChild(mInput);
+    const tField = el('div','mini-field grow'); tField.appendChild(el('label',null,'Détail')); const tInput=document.createElement('input'); tInput.type='text'; tInput.placeholder='2x Piri Piri, 1x Sriracha…'; tField.appendChild(tInput);
+    const addBtn = el('button','btn btn-sm','+ Commande');
+    addBtn.addEventListener('click', async ()=>{
+      if(!dInput.value){ toast('Date requise'); return; }
+      addBtn.disabled = true;
+      try{ await opts.onAddCommande({date:dInput.value, montant:Number(mInput.value)||0, detail:tInput.value.trim()}); }
+      finally{ addBtn.disabled = false; }
+    });
+    cForm.appendChild(dField); cForm.appendChild(mField); cForm.appendChild(tField); cForm.appendChild(addBtn);
+    container.appendChild(cForm);
+  }
+  if(opts.onAddNote){
+    const composer = el('div','feed-composer');
+    const ta = document.createElement('textarea'); ta.placeholder='Écrire une note…';
+    const row = el('div','feed-composer-row');
+    const authSel = document.createElement('select');
+    D.owners.forEach(o=>{ const op=el('option',null,o); op.value=o; authSel.appendChild(op); });
+    const btn = el('button','btn btn-sm btn-primary','Ajouter');
+    btn.addEventListener('click', async ()=>{
+      const texte = ta.value.trim(); if(!texte) return;
+      btn.disabled = true;
+      try{ await opts.onAddNote(texte, authSel.value); ta.value=''; }
+      finally{ btn.disabled = false; }
+    });
+    row.appendChild(authSel); row.appendChild(btn);
+    composer.appendChild(ta); composer.appendChild(row);
+    container.appendChild(composer);
+  }
+
+  const items = [];
+  (opts.notes||[]).forEach(n=> items.push({date:n.date||'', type:'note', auteur:n.auteur, texte:n.texte}));
+  (opts.commandes||[]).forEach(c=> items.push({date:c.date||'', type:'commande', montant:c.montant, texte:c.detail}));
+  items.sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+
+  const list = el('div','feed');
+  if(items.length===0 && !opts.legacyNote && !opts.legacyCommande){ list.appendChild(el('div','muted','Aucune note pour le moment.')); }
+  items.forEach(it=>{
+    const row = el('div','feed-item'+(it.type==='commande'?' feed-item-commande':''));
+    const head = el('div','feed-item-head');
+    head.appendChild(el('span','feed-auteur', it.type==='commande' ? '🧾 Commande' : (it.auteur||'—')));
+    head.appendChild(el('span','feed-date', it.type==='commande' ? fmtDateDisplay(it.date) : fmtDateTimeDisplay(it.date)));
+    row.appendChild(head);
+    row.appendChild(el('div','feed-text', it.type==='commande' ? (fmtMoney(it.montant||0) + (it.texte?(' — '+it.texte):'')) : it.texte));
+    list.appendChild(row);
+  });
+  if(opts.legacyCommande){
+    const row = el('div','feed-item feed-item-commande feed-item-legacy');
+    row.appendChild(el('div','feed-auteur','🧾 Anciennes commandes'));
+    row.appendChild(el('div','feed-text', opts.legacyCommande));
+    list.appendChild(row);
+  }
+  if(opts.legacyNote){
+    const row = el('div','feed-item feed-item-legacy');
+    row.appendChild(el('div','feed-auteur','Ancienne note'));
+    row.appendChild(el('div','feed-text', opts.legacyNote));
+    list.appendChild(row);
+  }
+  container.appendChild(list);
+}
+function addDrawerExpandToggle(head, drawer){
+  const actions = el('div','drawer-head-actions');
+  const expandBtn = el('button','expand-btn','⤢'); expandBtn.title='Agrandir';
+  expandBtn.addEventListener('click', ()=>{
+    const isExp = drawer.classList.toggle('expanded');
+    expandBtn.textContent = isExp ? '⤡' : '⤢';
+    expandBtn.title = isExp ? 'Réduire' : 'Agrandir';
+  });
+  actions.appendChild(expandBtn);
+  const closeBtn = el('button','close-x','✕'); closeBtn.addEventListener('click', closeModal);
+  actions.appendChild(closeBtn);
+  head.appendChild(actions);
+  return actions;
+}
+
 function openCompanyDetail(id){
   const lead = state.companies.find(l=>l.id===id);
   if(!lead) return;
@@ -821,60 +954,65 @@ function openCompanyDetail(id){
   const drawer = el('div','drawer');
   const head = el('div','drawer-head');
   head.appendChild(el('h2',null, lead.nom || '(sans nom)'));
-  const closeBtn = el('button','close-x','✕'); closeBtn.addEventListener('click', closeModal);
-  head.appendChild(closeBtn); drawer.appendChild(head);
+  addDrawerExpandToggle(head, drawer);
+  drawer.appendChild(head);
+
+  const body = el('div','drawer-body');
+  const colLeft = el('div','drawer-col-left');
+  const colRight = el('div','drawer-col-right');
+  body.appendChild(colLeft); body.appendChild(colRight);
+  drawer.appendChild(body);
 
   const fields = {};
-  function section(title){ drawer.appendChild(el('div','section-title',title)); }
-  function field(key, labelText, type){
+  function section(title, target){ (target||colLeft).appendChild(el('div','section-title',title)); }
+  function field(key, labelText, type, target){
     const f = el('div','field'); f.appendChild(el('label',null,labelText));
     const input = type==='textarea' ? document.createElement('textarea') : document.createElement('input');
-    if(type && type!=='textarea') input.type = type;
+    if(type!=='textarea') input.type = type || 'text';
     input.value = lead[key] || '';
-    f.appendChild(input); drawer.appendChild(f); fields[key]=input; return input;
+    f.appendChild(input); (target||colLeft).appendChild(f); fields[key]=input; return input;
   }
-  function select(key, labelText, options){
+  function select(key, labelText, options, target){
     const f = el('div','field'); f.appendChild(el('label',null,labelText));
     const s = document.createElement('select');
     const blank = el('option',null,'—'); blank.value=''; s.appendChild(blank);
     options.forEach(o=>{ const op=el('option',null,o); op.value=o; if(lead[key]===o) op.selected=true; s.appendChild(op); });
-    f.appendChild(s); drawer.appendChild(f); fields[key]=s; return s;
+    f.appendChild(s); (target||colLeft).appendChild(f); fields[key]=s; return s;
   }
 
   field('nom','Nom');
   const fRow1 = el('div','field-row');
-  select('persona','Persona', D.personas); const personaField = drawer.lastChild; fRow1.appendChild(personaField);
-  select('stage','Étape', STAGE_ORDER); const stageField = drawer.lastChild; fRow1.appendChild(stageField);
-  drawer.appendChild(fRow1);
+  select('persona','Persona', D.personas); const personaField = colLeft.lastChild; fRow1.appendChild(personaField);
+  select('stage','Étape', STAGE_ORDER); const stageField = colLeft.lastChild; fRow1.appendChild(stageField);
+  colLeft.appendChild(fRow1);
   const fRow2 = el('div','field-row');
-  select('priorite','Priorité', D.priorites); const prioField = drawer.lastChild; fRow2.appendChild(prioField);
+  select('priorite','Priorité', D.priorites); const prioField = colLeft.lastChild; fRow2.appendChild(prioField);
   const fNext = document.createElement('div'); fNext.appendChild(el('label',null,'Prochaine action')); const iNext=document.createElement('input'); iNext.type='date'; iNext.value=parseISODate(lead.date_prochaine_action)?lead.date_prochaine_action:''; fNext.appendChild(iNext);
-  fRow2.appendChild(fNext); drawer.appendChild(fRow2);
+  fRow2.appendChild(fNext); colLeft.appendChild(fRow2);
   fields.date_prochaine_action=iNext;
   const ownerWrap = el('div','check-row');
   const currentOwners = ownersList(lead.owners);
   D.owners.forEach(o=>{ const lbl=document.createElement('label'); const cb=document.createElement('input'); cb.type='checkbox'; cb.value=o; cb.checked=currentOwners.includes(o); lbl.appendChild(cb); lbl.appendChild(document.createTextNode(o)); ownerWrap.appendChild(lbl); });
-  const fOwner = el('div','field'); fOwner.appendChild(el('label',null,'Owner(s)')); fOwner.appendChild(ownerWrap); drawer.appendChild(fOwner);
+  const fOwner = el('div','field'); fOwner.appendChild(el('label',null,'Owner(s)')); fOwner.appendChild(ownerWrap); colLeft.appendChild(fOwner);
   field('valeur','Valeur (€)','number');
-  field('detail','Notes','textarea');
 
   const details = document.createElement('details'); details.className='more';
   const summary = document.createElement('summary'); summary.textContent='Plus de détails'; details.appendChild(summary);
-  drawer.appendChild(details);
+  colLeft.appendChild(details);
   function fieldIn(container, key, labelText, type){
     const f = el('div','field'); f.appendChild(el('label',null,labelText));
     const input = type==='textarea' ? document.createElement('textarea') : document.createElement('input');
-    if(type && type!=='textarea') input.type = type;
+    if(type!=='textarea') input.type = type || 'text';
     input.value = lead[key] || '';
     f.appendChild(input); container.appendChild(f); fields[key]=input; return input;
   }
   fieldIn(details, 'instagram', 'Instagram (@handle)');
   fieldIn(details, 'site_web', 'Site web', 'url');
+  fieldIn(details, 'localisation', 'Adresse (pour la carte)');
   fieldIn(details, 'ville_pays', 'Ville / Pays');
-  select('objectif','Objectif', D.objectifs); details.appendChild(drawer.lastChild);
+  select('objectif','Objectif', D.objectifs, details);
   const dOld = document.createElement('div'); dOld.appendChild(el('label',null,'Dernier contact')); const iOld=document.createElement('input'); iOld.type='date'; iOld.value=parseISODate(lead.dernier_contact)?lead.dernier_contact:''; dOld.className='field'; dOld.appendChild(iOld);
   details.appendChild(dOld); fields.dernier_contact=iOld;
-  fieldIn(details, 'commandes', 'Commandes passées');
 
   section('Contacts liés');
   const contactsBox = el('div');
@@ -888,10 +1026,35 @@ function openCompanyDetail(id){
     row.appendChild(openBtn);
     contactsBox.appendChild(row);
   });
-  drawer.appendChild(contactsBox);
+  colLeft.appendChild(contactsBox);
   const addContactBtn = el('button','btn btn-sm','+ Ajouter un contact'); addContactBtn.style.marginTop='8px';
   addContactBtn.addEventListener('click', ()=>openContactModal(null, id));
-  drawer.appendChild(addContactBtn);
+  colLeft.appendChild(addContactBtn);
+
+  section('Historique & notes', colRight);
+  const feedBox = el('div');
+  colRight.appendChild(feedBox);
+  let currentNotes = parseLog(lead.notes_log);
+  let currentCommandes = parseLog(lead.commandes_log);
+  function renderCompanyFeed(){
+    renderFeed(feedBox, {
+      notes: currentNotes,
+      commandes: currentCommandes,
+      legacyNote: lead.detail,
+      legacyCommande: lead.commandes,
+      onAddNote: async (texte, auteur)=>{
+        const next = currentNotes.concat([{date:new Date().toISOString(), auteur, texte}]);
+        await updateDoc('Entreprises', id, {notes_log: JSON.stringify(next)});
+        currentNotes = next; renderCompanyFeed(); toast('Note ajoutée');
+      },
+      onAddCommande: async (data)=>{
+        const next = currentCommandes.concat([data]);
+        await updateDoc('Entreprises', id, {commandes_log: JSON.stringify(next)});
+        currentCommandes = next; renderCompanyFeed(); toast('Commande ajoutée');
+      }
+    });
+  }
+  renderCompanyFeed();
 
   const footer = el('div','drawer-footer');
   const del = el('button','btn btn-danger','Supprimer');
@@ -936,15 +1099,25 @@ document.getElementById('contactsSearch').addEventListener('input', e=>{ state.c
 document.getElementById('addContactBtn').addEventListener('click', ()=>openContactModal(null));
 function openContactModal(contact, presetCompanyId){
   const root = document.getElementById('modalRoot'); root.innerHTML='';
-  const overlay = el('div','overlay center');
-  const modal = el('div','modal');
-  modal.appendChild(el('h2',null, contact ? 'Modifier le contact' : 'Nouveau contact'));
+  const overlay = el('div','overlay');
+  const drawer = el('div','drawer');
+  const head = el('div','drawer-head');
+  head.appendChild(el('h2',null, contact ? (contact.nom||'(sans nom)') : 'Nouveau contact'));
+  addDrawerExpandToggle(head, drawer);
+  drawer.appendChild(head);
+
+  const body = el('div','drawer-body');
+  const colLeft = el('div','drawer-col-left');
+  const colRight = el('div','drawer-col-right');
+  body.appendChild(colLeft); body.appendChild(colRight);
+  drawer.appendChild(body);
+
   const fields = {};
   function field(key, labelText, type, val){
     const f = el('div','field'); f.appendChild(el('label',null,labelText));
     const input = type==='textarea' ? document.createElement('textarea') : document.createElement('input');
-    if(type && type!=='textarea') input.type = type;
-    input.value = val || ''; f.appendChild(input); modal.appendChild(f); fields[key]=input; return input;
+    if(type!=='textarea') input.type = type || 'text';
+    input.value = val || ''; f.appendChild(input); colLeft.appendChild(f); fields[key]=input; return input;
   }
   field('nom','Nom', 'text', contact && contact.nom);
   const compSel = document.createElement('select');
@@ -954,27 +1127,52 @@ function openContactModal(contact, presetCompanyId){
     if((contact && contact.entreprise_id===c.id) || (!contact && presetCompanyId===c.id)) o.selected=true;
     compSel.appendChild(o);
   });
-  const fComp = el('div','field'); fComp.appendChild(el('label',null,'Entreprise liée')); fComp.appendChild(compSel); modal.appendChild(fComp);
+  const fComp = el('div','field'); fComp.appendChild(el('label',null,'Entreprise liée')); fComp.appendChild(compSel); colLeft.appendChild(fComp);
   field('role','Rôle / fonction', 'text', contact && contact.role);
   field('email','Email', 'email', contact && contact.email);
   field('telephone','Téléphone', 'tel', contact && contact.telephone);
-  field('notes','Notes', 'textarea', contact && contact.notes);
+
+  if(contact){
+    const company = state.companies.find(c=>c.id===contact.entreprise_id);
+    colRight.appendChild(el('div','section-title','Historique & notes'));
+    const feedBox = el('div'); colRight.appendChild(feedBox);
+    let currentNotes = parseLog(contact.notes_log);
+    const companyCommandes = company ? parseLog(company.commandes_log) : [];
+    function renderContactFeed(){
+      renderFeed(feedBox, {
+        notes: currentNotes,
+        commandes: companyCommandes,
+        legacyCommande: company ? company.commandes : '',
+        legacyNote: contact.notes,
+        onAddNote: async (texte, auteur)=>{
+          const next = currentNotes.concat([{date:new Date().toISOString(), auteur, texte}]);
+          await updateDoc('Contacts', contact.id, {notes_log: JSON.stringify(next)});
+          currentNotes = next; renderContactFeed(); toast('Note ajoutée');
+        }
+      });
+    }
+    renderContactFeed();
+  } else {
+    colRight.appendChild(el('div','section-title','Historique & notes'));
+    colRight.appendChild(el('div','muted','Vous pourrez ajouter des notes une fois le contact créé.'));
+  }
+
   const actions = el('div','drawer-footer');
   if(contact){
     const del = el('button','btn btn-danger','Supprimer');
-    del.addEventListener('click', async ()=>{ await deleteDoc('Contacts', contact.id); closeModal(); toast('Contact supprimé'); });
+    del.addEventListener('click', async ()=>{ if(confirm('Supprimer ce contact ?')){ await deleteDoc('Contacts', contact.id); closeModal(); toast('Contact supprimé'); } });
     actions.appendChild(del);
   } else actions.appendChild(el('div'));
   const save = el('button','btn btn-primary', contact ? 'Enregistrer' : 'Créer');
   save.addEventListener('click', async ()=>{
-    const data = { nom: fields.nom.value.trim(), entreprise_id: compSel.value || '', role: fields.role.value, email: fields.email.value, telephone: fields.telephone.value, notes: fields.notes.value };
+    const data = { nom: fields.nom.value.trim(), entreprise_id: compSel.value || '', role: fields.role.value, email: fields.email.value, telephone: fields.telephone.value };
     if(!data.nom){ toast('Le nom est requis'); return; }
-    if(contact) await updateDoc('Contacts', contact.id, data); else await createDoc('Contacts', data);
-    closeModal(); toast(contact ? 'Contact mis à jour' : 'Contact créé');
+    if(contact){ await updateDoc('Contacts', contact.id, data); closeModal(); toast('Contact mis à jour'); }
+    else{ const newId = await createDoc('Contacts', data); closeModal(); toast('Contact créé'); const created = state.contacts.find(c=>c.id===newId); if(created) openContactModal(created); }
   });
   actions.appendChild(save);
-  modal.appendChild(actions);
-  overlay.appendChild(modal);
+  drawer.appendChild(actions);
+  overlay.appendChild(drawer);
   overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
   root.appendChild(overlay);
 }
@@ -1012,7 +1210,7 @@ function openB2CModal(customer){
   function field(key, labelText, type){
     const f = el('div','field'); f.appendChild(el('label',null,labelText));
     const input = type==='textarea' ? document.createElement('textarea') : document.createElement('input');
-    if(type && type!=='textarea') input.type = type;
+    if(type!=='textarea') input.type = type || 'text';
     input.value = customer ? (customer[key] || '') : '';
     f.appendChild(input); drawer.appendChild(f); fields[key]=input; return input;
   }
