@@ -94,10 +94,16 @@ a{color:var(--primary);}
 .toolbar .spacer{flex:1;}
 .search-toggle{display:flex;}
 .search-icon-btn{padding:11px 13px;display:inline-flex;align-items:center;justify-content:center;}
-input.search-input-big{width:260px;max-width:60vw;padding:11px 16px;font-weight:700;font-size:13px;border:1.5px solid var(--border-strong);border-radius:var(--radius);box-shadow:var(--shadow-sm);background:var(--surface);color:var(--text);}
+input.search-input-big{width:420px;max-width:80vw;padding:11px 16px;font-weight:700;font-size:13px;border:1.5px solid var(--border-strong);border-radius:var(--radius);box-shadow:var(--shadow-sm);background:var(--surface);color:var(--text);}
+.toolbar input.search-input-big{width:420px;max-width:80vw;min-width:0;}
 .filter-wrap{position:relative;}
 .filter-count{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;background:var(--primary);color:#fff;border-radius:50%;font-size:10px;font-weight:800;margin-left:6px;}
 .filter-panel{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1.5px solid var(--border);box-shadow:var(--shadow-sm);padding:14px;border-radius:var(--radius);display:flex;flex-direction:column;gap:10px;min-width:220px;z-index:50;}
+.address-suggestions{position:absolute;top:100%;left:0;right:0;margin-top:4px;background:var(--surface);border:1.5px solid var(--border);box-shadow:var(--shadow-sm);border-radius:var(--radius);max-height:220px;overflow-y:auto;z-index:60;}
+.address-suggestions.hidden{display:none;}
+.address-suggestion-item{padding:9px 12px;font-size:12.5px;cursor:pointer;border-bottom:1px solid var(--border-soft);}
+.address-suggestion-item:last-child{border-bottom:none;}
+.address-suggestion-item:hover{background:var(--surface-2);}
 .filter-panel.hidden{display:none;}
 .filter-panel select{width:100%;min-width:0;}
 
@@ -641,6 +647,36 @@ function buildSearchToggle(value, placeholder, onInput){
   input.addEventListener('keydown', e=>{ if(e.key==='Escape'){ input.value=''; onInput(''); showBtn(); } });
   if(value) wrap.appendChild(input); else wrap.appendChild(btn);
   return {wrap, focusInput: showInput};
+}
+function attachAddressAutocomplete(input, onSelect){
+  const field = input.parentElement;
+  field.style.position = 'relative';
+  const list = el('div','address-suggestions hidden');
+  field.appendChild(list);
+  const triggerLookup = debounce(async ()=>{
+    const q = input.value.trim();
+    if(q.length < 3){ list.classList.add('hidden'); list.innerHTML=''; return; }
+    try{
+      const res = await fetch('https://api-adresse.data.gouv.fr/search/?limit=5&q='+encodeURIComponent(q));
+      const data = await res.json();
+      const feats = data.features || [];
+      list.innerHTML = '';
+      feats.forEach(f=>{
+        const item = el('div','address-suggestion-item', f.properties.label);
+        item.addEventListener('mousedown', e=>{
+          e.preventDefault();
+          input.value = f.properties.label;
+          list.classList.add('hidden'); list.innerHTML='';
+          if(onSelect) onSelect({ lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0], label: f.properties.label });
+        });
+        list.appendChild(item);
+      });
+      list.classList.toggle('hidden', feats.length===0);
+    }catch(e){ /* API Adresse indisponible : la saisie libre reste possible */ }
+  }, 300);
+  input.addEventListener('input', triggerLookup);
+  input.addEventListener('focus', ()=>{ if(input.value.trim().length>=3) triggerLookup(); });
+  input.addEventListener('blur', ()=> setTimeout(()=> list.classList.add('hidden'), 150));
 }
 function renderCompanyFilterToolbar(container, opts){
   container.innerHTML='';
@@ -1502,7 +1538,9 @@ function openCompanyDetail(id){
   }
 
   field('nom','Nom');
-  field('localisation','Adresse (numéro, rue, ville)');
+  const adresseInput = field('localisation','Adresse (numéro, rue, ville)');
+  let pendingGeo = null;
+  attachAddressAutocomplete(adresseInput, geo=>{ pendingGeo = geo; });
   const fRow1 = el('div','field-row');
   select('persona','Persona', D.personas); const personaField = panelInfos.lastChild; fRow1.appendChild(personaField);
   select('stage','Étape', STAGE_ORDER); const stageField = panelInfos.lastChild; fRow1.appendChild(stageField);
@@ -1601,6 +1639,9 @@ function openCompanyDetail(id){
     const patch = {};
     Object.keys(fields).forEach(k=>{ let v = fields[k].value; if(k==='valeur') v = Number(v)||0; patch[k]=v; });
     patch.owners = Array.from(ownerWrap.querySelectorAll('input:checked')).map(c=>c.value).join(', ');
+    if(pendingGeo && patch.localisation === pendingGeo.label){
+      patch.geo_lat = pendingGeo.lat; patch.geo_lng = pendingGeo.lng;
+    }
     if(patch.stage && patch.stage!==lead.stage){
       currentNotes = currentNotes.concat([{date:new Date().toISOString(), auteur:'Système', texte:'Changement de statut : '+(lead.stage||'—')+' → '+patch.stage, type:'Changement de statut'}]);
       patch.notes_log = JSON.stringify(currentNotes);
