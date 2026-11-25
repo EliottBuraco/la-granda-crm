@@ -390,14 +390,13 @@ const KO = "Perdu";
 const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbyhffsu0e5Q432c_XwQJBV5iZfs8aVbxh4vF9zhHPTF-kAv1QB0ZaBA1X8xv7YsJFsjZw/exec";
 
 const STAGE_COLOR = {
-  'À prospecter':               { bg:'var(--phase-prospection)',  fg:'#fff' },
-  'Contacté':                   { bg:'var(--phase-contacte)',     fg:'#fff' },
-  'Qualifié':                   { bg:'var(--phase-qualification)',fg:'#fff' },
-  'Intéressé':                  { bg:'var(--phase-interesse)',    fg:'#141414' },
-  'Échantillon / Offre envoyé': { bg:'var(--phase-negociation)',  fg:'#fff' },
-  'Première commande':          { bg:'var(--phase-premiere)',     fg:'#fff' },
-  'Client actif':                { bg:'var(--phase-actif-bg)',     fg:'var(--phase-actif-fg)' },
-  'Perdu':                       { bg:'var(--phase-perdu-bg)',     fg:'var(--phase-perdu-fg)' },
+  'À prospecter':      { bg:'var(--phase-prospection)',  fg:'#fff' },
+  'Échantillon envoyé':{ bg:'var(--phase-negociation)',  fg:'#fff' },
+  'Qualifié':          { bg:'var(--phase-qualification)',fg:'#fff' },
+  'Intéressé':         { bg:'var(--phase-interesse)',    fg:'#141414' },
+  'Première commande': { bg:'var(--phase-premiere)',     fg:'#fff' },
+  'Client actif':       { bg:'var(--phase-actif-bg)',     fg:'var(--phase-actif-fg)' },
+  'Perdu':              { bg:'var(--phase-perdu-bg)',     fg:'var(--phase-perdu-fg)' },
 };
 function stageColor(stage){ return STAGE_COLOR[stage] || STAGE_COLOR['À prospecter']; }
 

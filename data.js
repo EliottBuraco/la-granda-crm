@@ -1,10 +1,9 @@
 window.STATIC_DATA = {
 "stageOrder": [
 "À prospecter",
-"Contacté",
+"Échantillon envoyé",
 "Qualifié",
 "Intéressé",
-"Échantillon / Offre envoyé",
 "Première commande",
 "Client actif",
 "Perdu"
