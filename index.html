@@ -136,9 +136,11 @@ a{color:var(--primary);}
 .kanban-col-head .n{font-size:11px;color:var(--text-muted);font-weight:700;}
 .stage-dot{width:10px;height:10px;border-radius:50%;flex:none;}
 .kanban-col-body{flex:1;padding:12px;min-height:120px;display:flex;flex-direction:column;gap:10px;}
-.kcard{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;cursor:pointer;box-shadow:var(--shadow-sm);transition:transform .1s ease,box-shadow .1s ease;}
+.kcard{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;cursor:grab;box-shadow:var(--shadow-sm);transition:transform .1s ease,box-shadow .1s ease;}
 .kcard:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 #141414;}
 :root[data-theme="dark"] .kcard:hover{box-shadow:5px 5px 0 rgba(0,0,0,.55);}
+.kcard.dragging{opacity:.4;}
+.kanban-col-body.drag-over{background:var(--primary-tint);outline:2px dashed var(--primary);outline-offset:-4px;}
 .kcard .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
 .kcard .nom{font-weight:700;font-size:14.5px;}
 .kcard .meta{font-size:12px;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
@@ -391,8 +393,8 @@ const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbyhffsu0e5Q432c
 
 const STAGE_COLOR = {
   'À prospecter':      { bg:'var(--phase-prospection)',  fg:'#fff' },
+  'Contacté':          { bg:'var(--phase-contacte)',     fg:'#fff' },
   'Échantillon envoyé':{ bg:'var(--phase-negociation)',  fg:'#fff' },
-  'Qualifié':          { bg:'var(--phase-qualification)',fg:'#fff' },
   'Intéressé':         { bg:'var(--phase-interesse)',    fg:'#141414' },
   'Première commande': { bg:'var(--phase-premiere)',     fg:'#fff' },
   'Client actif':       { bg:'var(--phase-actif-bg)',     fg:'var(--phase-actif-fg)' },
@@ -862,6 +864,13 @@ function renderPipeline(){
     if(inStage.length===0) body.appendChild(el('div','muted','—'));
     inStage.forEach(l=>{
       const card = el('div','kcard');
+      card.draggable = true;
+      card.addEventListener('dragstart', e=>{
+        e.dataTransfer.setData('text/plain', l.id);
+        e.dataTransfer.effectAllowed = 'move';
+        card.classList.add('dragging');
+      });
+      card.addEventListener('dragend', ()=> card.classList.remove('dragging'));
       const top = el('div','top-row');
       top.appendChild(el('span','nom', l.nom || '(sans nom)'));
       top.appendChild(pepperRating(l.priorite));
@@ -877,6 +886,17 @@ function renderPipeline(){
       card.appendChild(meta);
       card.addEventListener('click', ()=>openCompanyDetail(l.id));
       body.appendChild(card);
+    });
+    body.addEventListener('dragover', e=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; body.classList.add('drag-over'); });
+    body.addEventListener('dragleave', ()=> body.classList.remove('drag-over'));
+    body.addEventListener('drop', e=>{
+      e.preventDefault();
+      body.classList.remove('drag-over');
+      const id = e.dataTransfer.getData('text/plain');
+      if(!id) return;
+      const company = state.companies.find(c=>c.id===id);
+      if(!company || company.stage===stage) return;
+      updateDoc('Entreprises', id, {stage}).then(()=>toast('Étape mise à jour'));
     });
     col.appendChild(body);
     board.appendChild(col);
