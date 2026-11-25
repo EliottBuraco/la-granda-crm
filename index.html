@@ -92,6 +92,9 @@ a{color:var(--primary);}
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px;}
 .toolbar select, .toolbar input[type=search]{width:auto;min-width:120px;}
 .toolbar .spacer{flex:1;}
+.search-toggle{display:flex;}
+.search-icon-btn{padding:11px 13px;display:inline-flex;align-items:center;justify-content:center;}
+input.search-input-big{width:260px;max-width:60vw;padding:11px 16px;font-weight:700;font-size:13px;border:1.5px solid var(--border-strong);border-radius:var(--radius);box-shadow:var(--shadow-sm);background:var(--surface);color:var(--text);}
 .filter-wrap{position:relative;}
 .filter-count{display:inline-flex;align-items:center;justify-content:center;min-width:16px;height:16px;padding:0 4px;background:var(--primary);color:#fff;border-radius:50%;font-size:10px;font-weight:800;margin-left:6px;}
 .filter-panel{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1.5px solid var(--border);box-shadow:var(--shadow-sm);padding:14px;border-radius:var(--radius);display:flex;flex-direction:column;gap:10px;min-width:220px;z-index:50;}
@@ -131,8 +134,9 @@ a{color:var(--primary);}
 
 .kanban{display:flex;gap:18px;overflow-x:auto;padding-bottom:10px;}
 .kanban-col{flex:1 1 240px;min-width:240px;display:flex;flex-direction:column;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);background:var(--surface-2);}
-.kanban-col-head{padding:13px 16px;background:var(--surface);border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;gap:8px;}
-.kanban-col-head .t{font-weight:800;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;display:flex;align-items:center;gap:8px;}
+.kanban-col-head{padding:13px 16px;min-height:62px;background:var(--surface);border-bottom:1px solid var(--border-soft);display:flex;flex-direction:column;justify-content:center;gap:4px;}
+.kanban-col-head .t{font-weight:800;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em;display:flex;align-items:center;gap:8px;min-width:0;}
+.kanban-col-head .t span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
 .kanban-col-head .n{font-size:11px;color:var(--text-muted);font-weight:700;}
 .stage-dot{width:10px;height:10px;border-radius:50%;flex:none;}
 .kanban-col-body{flex:1;padding:12px;min-height:120px;display:flex;flex-direction:column;gap:10px;}
@@ -312,12 +316,6 @@ details.more[open] summary{color:var(--text);}
     <section class="view" id="view-pipeline">
       <div class="toolbar" id="pipelineToolbar"></div>
       <div class="kanban" id="kanban"></div>
-      <div class="table-wrap hidden" id="pipelineTableWrap">
-        <table>
-          <thead><tr><th>Entreprise</th><th>Persona</th><th>Étape</th><th>Priorité</th><th>Owner</th><th>Prochaine action</th><th>Valeur</th></tr></thead>
-          <tbody id="pipelineTbody"></tbody>
-        </table>
-      </div>
     </section>
 
     <section class="view" id="view-tournee">
@@ -397,7 +395,7 @@ const STAGE_COLOR = {
   'Échantillon envoyé':{ bg:'var(--phase-negociation)',  fg:'#fff' },
   'Intéressé':         { bg:'var(--phase-interesse)',    fg:'#141414' },
   'Première commande': { bg:'var(--phase-premiere)',     fg:'#fff' },
-  'Client actif':       { bg:'var(--phase-actif-bg)',     fg:'var(--phase-actif-fg)' },
+  'Client récurrent':   { bg:'var(--phase-actif-bg)',     fg:'var(--phase-actif-fg)' },
   'Perdu':              { bg:'var(--phase-perdu-bg)',     fg:'var(--phase-perdu-fg)' },
 };
 function stageColor(stage){ return STAGE_COLOR[stage] || STAGE_COLOR['À prospecter']; }
@@ -405,14 +403,14 @@ function stageColor(stage){ return STAGE_COLOR[stage] || STAGE_COLOR['À prospec
 const MAP_STATUS_META = {
   prospect:       { label:'Prospect',       color:'var(--map-prospect)' },
   a_relancer:     { label:'À relancer',     color:'var(--map-relancer)' },
-  client_actif:   { label:'Client actif',   color:'var(--map-actif)' },
+  client_actif:   { label:'Client récurrent', color:'var(--map-actif)' },
   client_inactif: { label:'Client inactif', color:'var(--map-inactif)' },
   distributeur:   { label:'Distributeur',   color:'var(--map-distributeur)' },
 };
 function computeMapStatus(c){
   const persona = (c.persona||'').toLowerCase();
   if(persona.includes('distributeur') || persona.includes('grossiste')) return 'distributeur';
-  if(c.stage==='Client actif'){
+  if(c.stage==='Client récurrent'){
     const dates = parseLog(c.commandes_log).map(o=>o.date).filter(Boolean).sort();
     const lastDate = dates.length ? dates[dates.length-1] : null;
     if(lastDate){
@@ -522,7 +520,6 @@ const state = {
   contactsSearch: '', b2cSearch: '',
   tourneeFilters: { search:'', ville:'' },
   entreprisesViewMode: 'liste',
-  pipelineViewMode: 'colonnes',
   ready: false,
 };
 let tourneeSelected = new Set();
@@ -631,16 +628,29 @@ function buildViewToggle(options, current, onChange){
   });
   return toggle;
 }
+function buildSearchToggle(value, placeholder, onInput){
+  const wrap = el('div','search-toggle');
+  const icon = '<svg viewBox="0 0 20 20" width="15" height="15"><circle cx="8.3" cy="8.3" r="5.8" fill="none" stroke="currentColor" stroke-width="2"/><line x1="12.7" y1="12.7" x2="17.5" y2="17.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  const btn = el('button','btn search-icon-btn'); btn.innerHTML = icon; btn.title = 'Rechercher';
+  const input = document.createElement('input'); input.type='search'; input.className='btn search-input-big'; input.placeholder=placeholder; input.value=value;
+  function showInput(){ wrap.innerHTML=''; wrap.appendChild(input); input.focus(); }
+  function showBtn(){ wrap.innerHTML=''; wrap.appendChild(btn); }
+  btn.addEventListener('click', showInput);
+  input.addEventListener('input', e=> onInput(e.target.value));
+  input.addEventListener('blur', ()=>{ if(!input.value) showBtn(); });
+  input.addEventListener('keydown', e=>{ if(e.key==='Escape'){ input.value=''; onInput(''); showBtn(); } });
+  if(value) wrap.appendChild(input); else wrap.appendChild(btn);
+  return {wrap, focusInput: showInput};
+}
 function renderCompanyFilterToolbar(container, opts){
   container.innerHTML='';
-  const search = el('input'); search.type='search'; search.placeholder='Rechercher une entreprise…'; search.value=state.companyFilters.search;
   const triggerCompanySearch = debounce(()=>{
     renderCurrentView();
     const freshInput = container.querySelector('input[type=search]');
     if(freshInput){ freshInput.focus(); const v=freshInput.value; freshInput.setSelectionRange(v.length, v.length); }
   }, 300);
-  search.addEventListener('input', e=>{ state.companyFilters.search=e.target.value; triggerCompanySearch(); });
-  container.appendChild(search);
+  const searchToggle = buildSearchToggle(state.companyFilters.search, 'Rechercher une entreprise…', v=>{ state.companyFilters.search=v; triggerCompanySearch(); });
+  container.appendChild(searchToggle.wrap);
   container.appendChild(el('div','spacer'));
   function mkSelect(key, values, label){
     const s = document.createElement('select');
@@ -832,33 +842,19 @@ function openGoalModal(goal){
 function renderPipeline(){
   const toolbar = document.getElementById('pipelineToolbar');
   renderCompanyFilterToolbar(toolbar, {addButton:true});
-  toolbar.appendChild(buildViewToggle(
-    [{value:'colonnes',label:'Colonnes'},{value:'lignes',label:'Lignes'}],
-    state.pipelineViewMode,
-    m=>{ state.pipelineViewMode=m; renderPipeline(); }
-  ));
   const companies = getFilteredCompanies();
-
-  if(state.pipelineViewMode==='lignes'){
-    document.getElementById('kanban').classList.add('hidden');
-    document.getElementById('pipelineTableWrap').classList.remove('hidden');
-    renderPipelineRows(companies);
-    return;
-  }
-  document.getElementById('kanban').classList.remove('hidden');
-  document.getElementById('pipelineTableWrap').classList.add('hidden');
 
   const board = document.getElementById('kanban'); board.innerHTML='';
   STAGE_ORDER.forEach(stage=>{
     const sc = stageColor(stage);
     const col = el('div','kanban-col');
     const head = el('div','kanban-col-head');
-    const t = el('span','t');
+    const t = el('div','t');
     const dot = el('span','stage-dot'); dot.style.background = sc.bg;
-    t.appendChild(dot); t.appendChild(document.createTextNode(stage));
+    t.appendChild(dot); t.appendChild(el('span',null,stage));
     head.appendChild(t);
     const inStage = companies.filter(l=>l.stage===stage);
-    head.appendChild(el('span','n', inStage.length+' · '+fmtMoney(inStage.reduce((s,l)=>s+(Number(l.valeur)||0),0))));
+    head.appendChild(el('div','n', inStage.length+' · '+fmtMoney(inStage.reduce((s,l)=>s+(Number(l.valeur)||0),0))));
     col.appendChild(head);
     const body = el('div','kanban-col-body');
     if(inStage.length===0) body.appendChild(el('div','muted','—'));
@@ -900,45 +896,6 @@ function renderPipeline(){
     });
     col.appendChild(body);
     board.appendChild(col);
-  });
-}
-function renderPipelineRows(companies){
-  const tbody = document.getElementById('pipelineTbody'); tbody.innerHTML='';
-  const sorted = companies.slice().sort((a,b)=> STAGE_ORDER.indexOf(a.stage)-STAGE_ORDER.indexOf(b.stage) || (a.nom||'').localeCompare(b.nom||''));
-  if(sorted.length===0){
-    const tr = document.createElement('tr'); const td = document.createElement('td');
-    td.colSpan=7; td.className='empty'; td.textContent='Aucune entreprise ne correspond aux filtres.';
-    tr.appendChild(td); tbody.appendChild(tr); return;
-  }
-  sorted.forEach(l=>{
-    const tr = el('tr','leadrow');
-    const tdNom = document.createElement('td');
-    tdNom.appendChild(el('div',null,l.nom||'(sans nom)'));
-    if(l.instagram) tdNom.appendChild(el('div','muted','@'+l.instagram.replace(/^@/,'')));
-    tdNom.addEventListener('click', ()=>openCompanyDetail(l.id));
-    tdNom.style.cursor='pointer';
-    tr.appendChild(tdNom);
-    const tdPersona = el('td',null,l.persona||''); tdPersona.addEventListener('click', ()=>openCompanyDetail(l.id)); tdPersona.style.cursor='pointer';
-    tr.appendChild(tdPersona);
-    const tdStage = document.createElement('td');
-    const sel = document.createElement('select');
-    STAGE_ORDER.forEach(s=>{ const o=el('option',null,s); o.value=s; if(s===l.stage) o.selected=true; sel.appendChild(o); });
-    sel.addEventListener('change', e=>{ updateDoc('Entreprises', l.id, {stage:e.target.value}).then(()=>toast('Étape mise à jour')); });
-    tdStage.appendChild(sel);
-    tr.appendChild(tdStage);
-    const tdPrio = document.createElement('td');
-    if(l.priorite) tdPrio.appendChild(pepperRating(l.priorite));
-    tdPrio.addEventListener('click', ()=>openCompanyDetail(l.id)); tdPrio.style.cursor='pointer';
-    tr.appendChild(tdPrio);
-    const tdOwner = el('td',null, ownersList(l.owners).join(', ')); tdOwner.addEventListener('click', ()=>openCompanyDetail(l.id)); tdOwner.style.cursor='pointer';
-    tr.appendChild(tdOwner);
-    const tdDate = document.createElement('td');
-    if(l.date_prochaine_action){ tdDate.textContent = fmtDateDisplay(l.date_prochaine_action); if(l.date_prochaine_action<todayISO()) tdDate.style.color='var(--primary)'; }
-    tdDate.addEventListener('click', ()=>openCompanyDetail(l.id)); tdDate.style.cursor='pointer';
-    tr.appendChild(tdDate);
-    const tdValeur = el('td',null, l.valeur ? fmtMoney(l.valeur) : '—'); tdValeur.addEventListener('click', ()=>openCompanyDetail(l.id)); tdValeur.style.cursor='pointer';
-    tr.appendChild(tdValeur);
-    tbody.appendChild(tr);
   });
 }
 function elAvatar(owner){ const a = el('span','avatar-chip', initials(owner)); a.title = owner; return a; }
@@ -1120,14 +1077,13 @@ function renderTournee(){
   renderTourneesSaved();
   const toolbar = document.getElementById('tourneeToolbar'); toolbar.innerHTML='';
   const f = state.tourneeFilters;
-  const search = document.createElement('input'); search.type='search'; search.placeholder='Rechercher une entreprise…'; search.value=f.search;
   const triggerTourneeSearch = debounce(()=>{
     renderTournee();
     const freshInput = toolbar.querySelector('input[type=search]');
     if(freshInput){ freshInput.focus(); const v=freshInput.value; freshInput.setSelectionRange(v.length, v.length); }
   }, 300);
-  search.addEventListener('input', e=>{ f.search=e.target.value; triggerTourneeSearch(); });
-  toolbar.appendChild(search);
+  const searchToggle = buildSearchToggle(f.search, 'Rechercher une entreprise…', v=>{ f.search=v; triggerTourneeSearch(); });
+  toolbar.appendChild(searchToggle.wrap);
   const villes = Array.from(new Set(state.companies.map(l=>l.ville_pays).filter(Boolean))).sort((a,b)=>a.localeCompare(b));
   const villeSel = document.createElement('select');
   const opt0 = el('option',null,'Toutes villes'); opt0.value=''; villeSel.appendChild(opt0);
@@ -1546,6 +1502,7 @@ function openCompanyDetail(id){
   }
 
   field('nom','Nom');
+  field('localisation','Adresse (numéro, rue, ville)');
   const fRow1 = el('div','field-row');
   select('persona','Persona', D.personas); const personaField = panelInfos.lastChild; fRow1.appendChild(personaField);
   select('stage','Étape', STAGE_ORDER); const stageField = panelInfos.lastChild; fRow1.appendChild(stageField);
@@ -1574,7 +1531,6 @@ function openCompanyDetail(id){
   fieldIn(details, 'instagram', 'Instagram (@handle)');
   fieldIn(details, 'site_web', 'Site web', 'url');
   fieldIn(details, 'email', 'Email', 'email');
-  fieldIn(details, 'localisation', 'Adresse (pour la carte)');
   fieldIn(details, 'ville_pays', 'Ville / Pays');
   select('canal','Canal de distribution', D.canaux, details);
   select('objectif','Objectif', D.objectifs, details);

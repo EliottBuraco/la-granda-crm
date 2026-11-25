@@ -5,7 +5,7 @@ window.STATIC_DATA = {
 "Échantillon envoyé",
 "Intéressé",
 "Première commande",
-"Client actif",
+"Client récurrent",
 "Perdu"
 ],
 "personas": [
